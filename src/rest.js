@@ -15,9 +15,13 @@
      */
     Wia._restClient = Wia._restClient || {};
 
-    Wia._restClient._get = function(path, success, failure) {
+    Wia._restClient._get = function(path, params, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('get', Wia.restApiBase + path, true);
+      var url = Wia.restApiBase + path;
+      if (params) {
+        url += "?" + serializeParameters(params);
+      }
+      xhr.open('get', url, true);
       xhr = addRequestHeaders(xhr);
       xhr.responseType = 'json';
       xhr.onload = function() {
@@ -54,6 +58,45 @@
       xhr.send(JSON.stringify(data || {}));
     };
 
+    Wia._restClient._put = function(path, data, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('put', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200 || status == 201) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send(JSON.stringify(data || {}));
+    };
+
+    Wia._restClient._delete = function(path, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('delete', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send();
+    };
+
     function addRequestHeaders(xhr) {
       if (Wia.secretKey)
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.secretKey);
@@ -62,5 +105,14 @@
       if (Wia.appKey)
         xhr.setRequestHeader("x-app-key", Wia.appKey);
       return xhr;
+    }
+
+    function serializeParameters(obj) {
+      var str = [];
+      for(var p in obj)
+        if (obj.hasOwnProperty(p)) {
+          str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+        }
+      return str.join("&");
     }
 }(this));

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0px;
+        padding: 30px
+      }
+    </style>
+    <title>Usage example for the Wia Javascript SDK</title>
+    <!-- <script src="https://cdn.wia.io/js/dist/wia.js"></script> -->
+    <script src="../dist/wia-javascript-sdk-0.1.0.js"></script>
+    <script>
+        Wia.initialize({
+          appKey: "appKey"
+        });
+
+        var email = "email";
+        var password = "password"
+
+        Wia.customers.login({
+          username: email,
+          password: password
+        }, function(accessToken) {
+          console.log(accessToken);
+          Wia.devices.list({}, function(devices, count) {
+            console.log(devices);
+            console.log(count);
+          }, function(error) {
+            console.log(error);
+          });
+        });
+    </script>
+  </head>
+  <body>
+    <h1>Wia Javascript SDK Example</h1>
+  </body>
+</html>

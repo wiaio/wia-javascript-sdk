@@ -18,12 +18,28 @@
           appKey: "appKey"
         });
 
+        var fullName = "Joe Bloggs " + new Date().getTime();
+        var email = "joe" + new Date().getTime() + "@bloggs.com";
+        var password = "password"
+
         Wia.customers.signup({
-          fullName: "Joe Bloggs " + new Date().getTime(),
-          email: "joe" + new Date().getTime() + "@bloggs.com",
-          password: "password"
+          fullName: fullName,
+          email: email,
+          password: password
         }, function(customer) {
           console.log(customer);
+          Wia.customers.login({
+            username: email,
+            password: password
+          }, function(accessToken) {
+            console.log(accessToken);
+            Wia.devices.list({}, function(devices, count) {
+              console.log(devices);
+              console.log(count);
+            }, function(error) {
+              console.log(error);
+            });
+          });
         }, function(error) {
           console.log(error);
         });

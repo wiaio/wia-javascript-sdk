@@ -20,20 +20,16 @@
         failure(response);
       });
     }
-}(this));
 
-//
-// return new Promise(function(resolve, reject) {
-//   var xhr = new XMLHttpRequest();
-//   xhr.open('get', url, true);
-//   xhr.responseType = 'json';
-//   xhr.onload = function() {
-//     var status = xhr.status;
-//     if (status == 200) {
-//       resolve(xhr.response);
-//     } else {
-//       reject(status);
-//     }
-//   };
-//   xhr.send();
-// });
+    Wia.customers.login = function(data, success, failure) {
+      data.scope = "customer";
+      data.grantType = "password"
+
+      Wia._restClient._post('auth/token', data, function(accessToken) {
+        Wia.accessToken = accessToken.accessToken;
+        success(accessToken);
+      }, function(response) {
+        failure(response);
+      });
+    }
+}(this));

@@ -89,9 +89,13 @@ window.console.log = this.console.log || function() {};
      */
     Wia._restClient = Wia._restClient || {};
 
-    Wia._restClient._get = function(path, success, failure) {
+    Wia._restClient._get = function(path, params, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('get', Wia.restApiBase + path, true);
+      var url = Wia.restApiBase + path;
+      if (params) {
+        url += "?" + serializeParameters(params);
+      }
+      xhr.open('get', url, true);
       xhr = addRequestHeaders(xhr);
       xhr.responseType = 'json';
       xhr.onload = function() {
@@ -128,6 +132,45 @@ window.console.log = this.console.log || function() {};
       xhr.send(JSON.stringify(data || {}));
     };
 
+    Wia._restClient._put = function(path, data, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('put', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200 || status == 201) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send(JSON.stringify(data || {}));
+    };
+
+    Wia._restClient._delete = function(path, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('delete', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send();
+    };
+
     function addRequestHeaders(xhr) {
       if (Wia.secretKey)
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.secretKey);
@@ -136,6 +179,15 @@ window.console.log = this.console.log || function() {};
       if (Wia.appKey)
         xhr.setRequestHeader("x-app-key", Wia.appKey);
       return xhr;
+    }
+
+    function serializeParameters(obj) {
+      var str = [];
+      for(var p in obj)
+        if (obj.hasOwnProperty(p)) {
+          str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+        }
+      return str.join("&");
     }
 }(this));
 
@@ -161,23 +213,19 @@ window.console.log = this.console.log || function() {};
         failure(response);
       });
     }
-}(this));
 
-//
-// return new Promise(function(resolve, reject) {
-//   var xhr = new XMLHttpRequest();
-//   xhr.open('get', url, true);
-//   xhr.responseType = 'json';
-//   xhr.onload = function() {
-//     var status = xhr.status;
-//     if (status == 200) {
-//       resolve(xhr.response);
-//     } else {
-//       reject(status);
-//     }
-//   };
-//   xhr.send();
-// });
+    Wia.customers.login = function(data, success, failure) {
+      data.scope = "customer";
+      data.grantType = "password"
+
+      Wia._restClient._post('auth/token', data, function(accessToken) {
+        Wia.accessToken = accessToken.accessToken;
+        success(accessToken);
+      }, function(response) {
+        failure(response);
+      });
+    }
+}(this));
 
 /*
 *  @author Conall Laverty (team@wia.io)
@@ -201,26 +249,34 @@ window.console.log = this.console.log || function() {};
     };
 
     Wia.devices.retrieve = function(deviceId, success, failure) {
-      Wia._restClient._get('devices/' + deviceId, function(device) {
+      Wia._restClient._get('devices/' + deviceId, params, function(device) {
         success(device);
       }, function(response) {
         failure(response);
       });
     }
-}(this));
 
-//
-// return new Promise(function(resolve, reject) {
-//   var xhr = new XMLHttpRequest();
-//   xhr.open('get', url, true);
-//   xhr.responseType = 'json';
-//   xhr.onload = function() {
-//     var status = xhr.status;
-//     if (status == 200) {
-//       resolve(xhr.response);
-//     } else {
-//       reject(status);
-//     }
-//   };
-//   xhr.send();
-// });
+    Wia.devices.update = function(deviceId, data, success, failure) {
+      Wia._restClient._put('devices/' + deviceId, data, function(device) {
+        success(device);
+      }, function(response) {
+        failure(response);
+      });
+    }
+
+    Wia.devices.delete = function(deviceId, success, failure) {
+      Wia._restClient._delete('devices/' + deviceId, function(device) {
+        success(device);
+      }, function(response) {
+        failure(response);
+      });
+    }
+
+    Wia.devices.list = function(params, success, failure) {
+      Wia._restClient._get('devices', params, function(data) {
+        success(data.devices, data.count);
+      }, function(response) {
+        failure(response);
+      });
+    }
+}(this));
