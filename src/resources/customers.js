@@ -11,17 +11,11 @@
     /**
      * @namespace Provides an interface to Wia's Rest API
      */
-    Wia.devices = Wia.devices || {};
+    Wia.customers = Wia.customers || {};
 
-    Wia.devices.create = function(data, callback) {
-      if (callback) {
-        callback(data);
-      }
-    };
-
-    Wia.devices.retrieve = function(deviceId, success, failure) {
-      Wia._restClient._get('devices/' + deviceId, function(device) {
-        success(device);
+    Wia.customers.signup = function(data, success, failure) {
+      Wia._restClient._post('customers/signup', data, function(customer) {
+        success(customer);
       }, function(response) {
         failure(response);
       });

@@ -55,16 +55,20 @@ window.console.log = this.console.log || function() {};
      * Call this method first to set your authentication key.
      * @param {String} API Token
      */
-    Wia.Initialize = function(apiToken) {
-        Wia._initialize(apiToken);
+    Wia.initialize = function(options) {
+        Wia._initialize(options);
     };
 
     /**
      * This method is for Wia's own private use.
      * @param {String} API Token
      */
-    Wia._initialize = function(apiToken) {
-        Wia.apiToken = apiToken;
+    Wia._initialize = function(options) {
+      Wia.appKey = options.appKey || null;
+      Wia.secretKey = options.secretKey || null;
+      Wia.accessToken = options.accessToken || null;
+      Wia.restApiBase = options.restApiBase || Wia.restApiBase;
+      Wia.socketApiEndpoint = options.socketApiEndpoint || Wia.socketApiEndpoint;
     };
 }(this));
 
@@ -83,12 +87,97 @@ window.console.log = this.console.log || function() {};
     /**
      * @namespace Provides an interface to Wia's Rest API
      */
-    Wia.restClient = Wia.restClient || {};
+    Wia._restClient = Wia._restClient || {};
 
-    Wia.restClient._get = function(content) {
-        return content.toUpperCase();
+    Wia._restClient._get = function(path, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('get', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send();
     };
+
+    Wia._restClient._post = function(path, data, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('post', Wia.restApiBase + path, true);
+      xhr = addRequestHeaders(xhr);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.responseType = 'json';
+      xhr.onload = function() {
+        var status = xhr.status;
+        if (status == 200 || status == 201) {
+          success(xhr.response);
+        } else {
+          failure({
+            status: xhr.status,
+            response: xhr.response
+          });
+        }
+      };
+      xhr.send(JSON.stringify(data || {}));
+    };
+
+    function addRequestHeaders(xhr) {
+      if (Wia.secretKey)
+        xhr.setRequestHeader("Authorization", "Bearer " + Wia.secretKey);
+      if (Wia.accessToken)
+        xhr.setRequestHeader("Authorization", "Bearer " + Wia.accessToken);
+      if (Wia.appKey)
+        xhr.setRequestHeader("x-app-key", Wia.appKey);
+      return xhr;
+    }
 }(this));
+
+/*
+*  @author Conall Laverty (team@wia.io)
+*/
+
+/**
+ */
+(function(root) {
+    root.Wia = root.Wia || {};
+    var Wia = root.Wia;
+
+    /**
+     * @namespace Provides an interface to Wia's Rest API
+     */
+    Wia.customers = Wia.customers || {};
+
+    Wia.customers.signup = function(data, success, failure) {
+      Wia._restClient._post('customers/signup', data, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    }
+}(this));
+
+//
+// return new Promise(function(resolve, reject) {
+//   var xhr = new XMLHttpRequest();
+//   xhr.open('get', url, true);
+//   xhr.responseType = 'json';
+//   xhr.onload = function() {
+//     var status = xhr.status;
+//     if (status == 200) {
+//       resolve(xhr.response);
+//     } else {
+//       reject(status);
+//     }
+//   };
+//   xhr.send();
+// });
 
 /*
 *  @author Conall Laverty (team@wia.io)
@@ -110,4 +199,28 @@ window.console.log = this.console.log || function() {};
         callback(data);
       }
     };
+
+    Wia.devices.retrieve = function(deviceId, success, failure) {
+      Wia._restClient._get('devices/' + deviceId, function(device) {
+        success(device);
+      }, function(response) {
+        failure(response);
+      });
+    }
 }(this));
+
+//
+// return new Promise(function(resolve, reject) {
+//   var xhr = new XMLHttpRequest();
+//   xhr.open('get', url, true);
+//   xhr.responseType = 'json';
+//   xhr.onload = function() {
+//     var status = xhr.status;
+//     if (status == 200) {
+//       resolve(xhr.response);
+//     } else {
+//       reject(status);
+//     }
+//   };
+//   xhr.send();
+// });

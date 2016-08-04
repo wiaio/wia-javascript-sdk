@@ -55,15 +55,19 @@ window.console.log = this.console.log || function() {};
      * Call this method first to set your authentication key.
      * @param {String} API Token
      */
-    Wia.Initialize = function(apiToken) {
-        Wia._initialize(apiToken);
+    Wia.initialize = function(options) {
+        Wia._initialize(options);
     };
 
     /**
      * This method is for Wia's own private use.
      * @param {String} API Token
      */
-    Wia._initialize = function(apiToken) {
-        Wia.apiToken = apiToken;
+    Wia._initialize = function(options) {
+      Wia.appKey = options.appKey || null;
+      Wia.secretKey = options.secretKey || null;
+      Wia.accessToken = options.accessToken || null;
+      Wia.restApiBase = options.restApiBase || Wia.restApiBase;
+      Wia.socketApiEndpoint = options.socketApiEndpoint || Wia.socketApiEndpoint;
     };
 }(this));
