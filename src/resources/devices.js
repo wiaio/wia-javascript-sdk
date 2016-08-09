@@ -20,12 +20,12 @@
     };
 
     Wia.devices.retrieve = function(deviceId, success, failure) {
-      Wia._restClient._get('devices/' + deviceId, params, function(device) {
+      Wia._restClient._get('devices/' + deviceId, {}, function(device) {
         success(device);
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.update = function(deviceId, data, success, failure) {
       Wia._restClient._put('devices/' + deviceId, data, function(device) {
@@ -33,7 +33,7 @@
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.delete = function(deviceId, success, failure) {
       Wia._restClient._delete('devices/' + deviceId, function(device) {
@@ -41,7 +41,7 @@
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.list = function(params, success, failure) {
       Wia._restClient._get('devices', params, function(data) {
@@ -49,5 +49,5 @@
       }, function(response) {
         failure(response);
       });
-    }
+    };
 }(this));

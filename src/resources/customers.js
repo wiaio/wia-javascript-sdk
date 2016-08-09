@@ -19,11 +19,11 @@
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.customers.login = function(data, success, failure) {
       data.scope = "customer";
-      data.grantType = "password"
+      data.grantType = "password";
 
       Wia._restClient._post('auth/token', data, function(accessToken) {
         Wia.accessToken = accessToken.accessToken;
@@ -31,5 +31,5 @@
       }, function(response) {
         failure(response);
       });
-    }
+    };
 }(this));

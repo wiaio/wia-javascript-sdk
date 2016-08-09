@@ -10,11 +10,21 @@
     root.Wia = root.Wia || {};
     var Wia = root.Wia;
 
+    /**
+     * @namespace Provides an interface to Wia's Rest API
+     */
+    Wia.stream = Wia.stream || {};
+
+    var STREAM_TIMEOUT = 15;
+
+    Wia.stream.connected = false;
+
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client('api.wia.io', 3001, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.socketApiHost, Wia.socketApiPort, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
+      Wia.stream.connected = false;
       if (Wia.stream.onConnectionLost) {
         Wia.stream.onConnectionLost(response);
       }
@@ -64,9 +74,15 @@
               subscribeCallbacks["devices/" + deviceId + "/locations/+"](msgObj);
             } else if (topicAction.indexOf("commands") == 0) {
               exec(msgObj.command, function(err, stdout, stderr) {
-                if (err) console.log(err);
-                if (stdout) console.log(stdout);
-                if (stderr) console.log(stderr);
+                if (err) {
+                  console.log(err);
+                }
+                if (stdout) {
+                  console.log(stdout);
+                }
+                if (stderr) {
+                  console.log(stderr);
+                }
               });
             }
           }
@@ -76,24 +92,27 @@
       }
     };
 
-    /**
-     * @namespace Provides an interface to Wia's Rest API
-     */
-    Wia.stream = Wia.stream || {};
+    mqttClient.onMessageDelivered = function(message) {
+      if (Wia.stream.onMessageDelivered) {
+        Wia.stream.onMessageDelivered(message);
+      }
+    };
 
     Wia.stream.connect = function(opt) {
       mqttClient.connect({
-        timeout: 15,
+        timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey,
         password: " ",
-        useSSL: true,
+        useSSL: opt.useSSL || true,
         onSuccess: function() {
+          Wia.stream.connected = true;
           console.log("onSuccess");
           if (opt && opt.onSuccess) {
             opt.onSuccess();
           }
         },
         onFailure: function(err) {
+          Wia.stream.connected = false;
           console.log("onFailure");
           if (opt && opt.onFailure) {
             opt.onFailure(err);
@@ -103,16 +122,25 @@
     };
 
     Wia.stream.disconnect = function() {
+      Wia.stream.connected = false;
       mqttClient.disconnect();
     }
 
     Wia.stream.subscribe = function(topic, cb) {
       subscribeCallbacks[topic] = cb;
-      mqttClient.subscribe(topic);
+      mqttClient.subscribe(topic, {
+        qos: 0
+      });
     }
 
     Wia.stream.unsubscribe = function(topic, cb) {
       delete subscribeCallbacks[topic];
       mqttClient.unsubscribe(topic);
+    }
+
+    Wia.stream.publish = function(topic, data, cb) {
+      var message = new Paho.MQTT.Message(data);
+      message.destinationName = topic;
+      mqttClient.publish(message);
     }
 }(this));

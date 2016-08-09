@@ -26,6 +26,7 @@
         Wia.stream.connect({
           onSuccess: function() {
             console.log("Browser success");
+            console.log(Wia.stream.connected);
             Wia.events.subscribe({
               device: "device"
             }, function(event) {

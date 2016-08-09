@@ -48,8 +48,11 @@ window.console.log = this.console.log || function() {};
     // Set the rest server for Wia.
     Wia.restApiBase = "https://api.wia.io/v1/";
 
-    // Set the socket server for Wia.
-    Wia.socketApiEndpoint = "wss://api.wia.io:3001";
+    // Set the socket host for Wia.
+    Wia.socketApiHost = "api.wia.io";
+
+    // Set the socket host for Wia.
+    Wia.socketApiPort = 3001;
 
     /**
      * Call this method first to set your authentication key.

@@ -48,8 +48,11 @@ window.console.log = this.console.log || function() {};
     // Set the rest server for Wia.
     Wia.restApiBase = "https://api.wia.io/v1/";
 
-    // Set the socket server for Wia.
-    Wia.socketApiEndpoint = "wss://api.wia.io:3001";
+    // Set the socket host for Wia.
+    Wia.socketApiHost = "api.wia.io";
+
+    // Set the socket host for Wia.
+    Wia.socketApiPort = 3001;
 
     /**
      * Call this method first to set your authentication key.
@@ -2347,11 +2350,21 @@ Paho.MQTT = (function (global) {
     root.Wia = root.Wia || {};
     var Wia = root.Wia;
 
+    /**
+     * @namespace Provides an interface to Wia's Rest API
+     */
+    Wia.stream = Wia.stream || {};
+
+    var STREAM_TIMEOUT = 15;
+
+    Wia.stream.connected = false;
+
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client('api.wia.io', 3001, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.socketApiHost, Wia.socketApiPort, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
+      Wia.stream.connected = false;
       if (Wia.stream.onConnectionLost) {
         Wia.stream.onConnectionLost(response);
       }
@@ -2401,9 +2414,15 @@ Paho.MQTT = (function (global) {
               subscribeCallbacks["devices/" + deviceId + "/locations/+"](msgObj);
             } else if (topicAction.indexOf("commands") == 0) {
               exec(msgObj.command, function(err, stdout, stderr) {
-                if (err) console.log(err);
-                if (stdout) console.log(stdout);
-                if (stderr) console.log(stderr);
+                if (err) {
+                  console.log(err);
+                }
+                if (stdout) {
+                  console.log(stdout);
+                }
+                if (stderr) {
+                  console.log(stderr);
+                }
               });
             }
           }
@@ -2413,24 +2432,27 @@ Paho.MQTT = (function (global) {
       }
     };
 
-    /**
-     * @namespace Provides an interface to Wia's Rest API
-     */
-    Wia.stream = Wia.stream || {};
+    mqttClient.onMessageDelivered = function(message) {
+      if (Wia.stream.onMessageDelivered) {
+        Wia.stream.onMessageDelivered(message);
+      }
+    };
 
     Wia.stream.connect = function(opt) {
       mqttClient.connect({
-        timeout: 15,
+        timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey,
         password: " ",
-        useSSL: true,
+        useSSL: opt.useSSL || true,
         onSuccess: function() {
+          Wia.stream.connected = true;
           console.log("onSuccess");
           if (opt && opt.onSuccess) {
             opt.onSuccess();
           }
         },
         onFailure: function(err) {
+          Wia.stream.connected = false;
           console.log("onFailure");
           if (opt && opt.onFailure) {
             opt.onFailure(err);
@@ -2440,17 +2462,26 @@ Paho.MQTT = (function (global) {
     };
 
     Wia.stream.disconnect = function() {
+      Wia.stream.connected = false;
       mqttClient.disconnect();
     }
 
     Wia.stream.subscribe = function(topic, cb) {
       subscribeCallbacks[topic] = cb;
-      mqttClient.subscribe(topic);
+      mqttClient.subscribe(topic, {
+        qos: 0
+      });
     }
 
     Wia.stream.unsubscribe = function(topic, cb) {
       delete subscribeCallbacks[topic];
       mqttClient.unsubscribe(topic);
+    }
+
+    Wia.stream.publish = function(topic, data, cb) {
+      var message = new Paho.MQTT.Message(data);
+      message.destinationName = topic;
+      mqttClient.publish(message);
     }
 }(this));
 
@@ -2475,11 +2506,11 @@ Paho.MQTT = (function (global) {
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.customers.login = function(data, success, failure) {
       data.scope = "customer";
-      data.grantType = "password"
+      data.grantType = "password";
 
       Wia._restClient._post('auth/token', data, function(accessToken) {
         Wia.accessToken = accessToken.accessToken;
@@ -2487,7 +2518,7 @@ Paho.MQTT = (function (global) {
       }, function(response) {
         failure(response);
       });
-    }
+    };
 }(this));
 
 /*
@@ -2512,12 +2543,12 @@ Paho.MQTT = (function (global) {
     };
 
     Wia.devices.retrieve = function(deviceId, success, failure) {
-      Wia._restClient._get('devices/' + deviceId, params, function(device) {
+      Wia._restClient._get('devices/' + deviceId, {}, function(device) {
         success(device);
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.update = function(deviceId, data, success, failure) {
       Wia._restClient._put('devices/' + deviceId, data, function(device) {
@@ -2525,7 +2556,7 @@ Paho.MQTT = (function (global) {
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.delete = function(deviceId, success, failure) {
       Wia._restClient._delete('devices/' + deviceId, function(device) {
@@ -2533,7 +2564,7 @@ Paho.MQTT = (function (global) {
       }, function(response) {
         failure(response);
       });
-    }
+    };
 
     Wia.devices.list = function(params, success, failure) {
       Wia._restClient._get('devices', params, function(data) {
@@ -2541,7 +2572,7 @@ Paho.MQTT = (function (global) {
       }, function(response) {
         failure(response);
       });
-    }
+    };
 }(this));
 
 /*
@@ -2555,17 +2586,165 @@ Paho.MQTT = (function (global) {
     var Wia = root.Wia;
 
     /**
-     * @namespace Provides an interface to Wia's Rest API
+     * @namespace Provides an interface
      */
     Wia.events = Wia.events || {};
 
     Wia.events.subscribe = function(data, callback) {
-      console.log(Wia.stream);
       if (data.name) {
         Wia.stream.subscribe("devices/" + data.device + "/events/" + data.name, callback);
       } else {
-        console.log("devices/" + data.device + "/events/+");
         Wia.stream.subscribe("devices/" + data.device + "/events/+", callback);
       }
+    };
+
+    Wia.events.list = function(params, success, failure) {
+      Wia._restClient._get('events', params, function(data) {
+        success(data.events, data.count);
+      }, function(response) {
+        failure(response);
+      });
+    };
+}(this));
+
+/*
+*  @author Conall Laverty (team@wia.io)
+*/
+
+/**
+ */
+(function(root) {
+    root.Wia = root.Wia || {};
+    var Wia = root.Wia;
+
+    /**
+     * @namespace Provides an interface
+     */
+    Wia.functions = Wia.functions || {};
+
+    Wia.functions.list = function(params, success, failure) {
+      Wia._restClient._get('functions', params, function(data) {
+        success(data.functions, data.count);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.functions.call = function(opt, success, failure) {
+      if (!opt) {
+        return failure({message: "No options specified."});
+      }
+
+      var functionId = null;
+      var deviceId = null;
+
+      if (typeof opt === "object") {
+        functionId = opt.id;
+        deviceId = opt.device;
+      } else {
+        functionId = opt;
+      }
+
+      if (deviceId && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + deviceId + '/functions/' + functionId + '/call', opt.data ? JSON.stringify(opt.data) : null, success);
+      } else {
+        Wia._restClient._post("functions/" + functionId + "/call", params, function(data) {
+          success(data);
+        }, function(response) {
+          failure(response);
+        });
+      }
+    };
+}(this));
+
+/*
+*  @author Conall Laverty (team@wia.io)
+*/
+
+/**
+ */
+(function(root) {
+    root.Wia = root.Wia || {};
+    var Wia = root.Wia;
+
+    /**
+     * @namespace Provides an interface
+     */
+    Wia.locations = Wia.locations || {};
+
+    Wia.locations.subscribe = function(data, callback) {
+      Wia.stream.subscribe("devices/" + data.device + "/locations", callback);
+    };
+
+    Wia.locations.list = function(params, success, failure) {
+      Wia._restClient._get('locations', params, function(data) {
+        success(data.locations, data.count);
+      }, function(response) {
+        failure(response);
+      });
+    };
+}(this));
+
+/*
+*  @author Conall Laverty (team@wia.io)
+*/
+
+/**
+ */
+(function(root) {
+    root.Wia = root.Wia || {};
+    var Wia = root.Wia;
+
+    /**
+     * @namespace Provides an interface
+     */
+    Wia.logs = Wia.logs || {};
+
+    Wia.logs.subscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.subscribe("devices/" + data.device + "/logs/" + data.level, callback);
+      } else {
+        Wia.stream.subscribe("devices/" + data.device + "/logs/+", callback);
+      }
+    };
+
+    Wia.logs.list = function(params, success, failure) {
+      Wia._restClient._get('logs', params, function(data) {
+        success(data.logs, data.count);
+      }, function(response) {
+        failure(response);
+      });
+    };
+}(this));
+
+/*
+*  @author Conall Laverty (team@wia.io)
+*/
+
+/**
+ */
+(function(root) {
+    root.Wia = root.Wia || {};
+    var Wia = root.Wia;
+
+    /**
+     * @namespace Provides an interface
+     */
+    Wia.sensors = Wia.sensors || {};
+
+    Wia.sensors.subscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.subscribe("devices/" + data.device + "/sensors/" + data.name, callback);
+      } else {
+        Wia.stream.subscribe("devices/" + data.device + "/sensors/+", callback);
+      }
+    };
+
+    Wia.sensors.list = function(params, success, failure) {
+      Wia._restClient._get('sensors', params, function(data) {
+        success(data.sensors, data.count);
+      }, function(response) {
+        failure(response);
+      });
     };
 }(this));

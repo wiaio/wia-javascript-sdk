@@ -9,17 +9,23 @@
     var Wia = root.Wia;
 
     /**
-     * @namespace Provides an interface to Wia's Rest API
+     * @namespace Provides an interface
      */
     Wia.events = Wia.events || {};
 
     Wia.events.subscribe = function(data, callback) {
-      console.log(Wia.stream);
       if (data.name) {
         Wia.stream.subscribe("devices/" + data.device + "/events/" + data.name, callback);
       } else {
-        console.log("devices/" + data.device + "/events/+");
         Wia.stream.subscribe("devices/" + data.device + "/events/+", callback);
       }
+    };
+
+    Wia.events.list = function(params, success, failure) {
+      Wia._restClient._get('events', params, function(data) {
+        success(data.events, data.count);
+      }, function(response) {
+        failure(response);
+      });
     };
 }(this));
