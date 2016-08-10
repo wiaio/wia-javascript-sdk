@@ -21,6 +21,14 @@
       }
     };
 
+    Wia.sensors.unsubscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.unsubscribe("devices/" + data.device + "/sensors/" + data.name, callback);
+      } else {
+        Wia.stream.unsubscribe("devices/" + data.device + "/sensors/+", callback);
+      }
+    };
+
     Wia.sensors.list = function(params, success, failure) {
       Wia._restClient._get('sensors', params, function(data) {
         success(data.sensors, data.count);

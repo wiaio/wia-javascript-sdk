@@ -2319,21 +2319,27 @@ Paho.MQTT = (function (global) {
     };
 
     function addRequestHeaders(xhr) {
-      if (Wia.secretKey)
+      if (Wia.secretKey) {
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.secretKey);
-      if (Wia.accessToken)
+      }
+
+      if (Wia.accessToken) {
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.accessToken);
-      if (Wia.appKey)
+      }
+
+      if (Wia.appKey) {
         xhr.setRequestHeader("x-app-key", Wia.appKey);
+      }
       return xhr;
     }
 
     function serializeParameters(obj) {
       var str = [];
-      for(var p in obj)
+      for(var p in obj) {
         if (obj.hasOwnProperty(p)) {
           str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-        }
+        }        
+      }
       return str.join("&");
     }
 }(this));
@@ -2464,25 +2470,25 @@ Paho.MQTT = (function (global) {
     Wia.stream.disconnect = function() {
       Wia.stream.connected = false;
       mqttClient.disconnect();
-    }
+    };
 
     Wia.stream.subscribe = function(topic, cb) {
       subscribeCallbacks[topic] = cb;
       mqttClient.subscribe(topic, {
         qos: 0
       });
-    }
+    };
 
     Wia.stream.unsubscribe = function(topic, cb) {
       delete subscribeCallbacks[topic];
       mqttClient.unsubscribe(topic);
-    }
+    };
 
     Wia.stream.publish = function(topic, data, cb) {
       var message = new Paho.MQTT.Message(data);
       message.destinationName = topic;
       mqttClient.publish(message);
-    }
+    };
 }(this));
 
 /*
@@ -2500,9 +2506,41 @@ Paho.MQTT = (function (global) {
      */
     Wia.customers = Wia.customers || {};
 
+    Wia.customers.create = function(data, success, failure) {
+      Wia._restClient._post('customers', data, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
     Wia.customers.retrieve = function(customerId, success, failure) {
       Wia._restClient._get('customers/' + customerId, {}, function(customer) {
         success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.update = function(customerId, data, success, failure) {
+      Wia._restClient._put('customers/' + customerId, data, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.delete = function(customerId, success, failure) {
+      Wia._restClient._delete('customers/' + customerId, function(data) {
+        success(data);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.list = function(params, success, failure) {
+      Wia._restClient._get('customers', params, function(data) {
+        success(data);
       }, function(response) {
         failure(response);
       });
@@ -2608,6 +2646,14 @@ Paho.MQTT = (function (global) {
       }
     };
 
+    Wia.events.unsubscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.unsubscribe("devices/" + data.device + "/events/" + data.name, callback);
+      } else {
+        Wia.stream.unsubscribe("devices/" + data.device + "/events/+", callback);
+      }
+    };
+
     Wia.events.list = function(params, success, failure) {
       Wia._restClient._get('events', params, function(data) {
         success(data.events, data.count);
@@ -2686,6 +2732,10 @@ Paho.MQTT = (function (global) {
       Wia.stream.subscribe("devices/" + data.device + "/locations", callback);
     };
 
+    Wia.locations.unsubscribe = function(data, callback) {
+      Wia.stream.unsubscribe("devices/" + data.device + "/locations", callback);
+    };
+
     Wia.locations.list = function(params, success, failure) {
       Wia._restClient._get('locations', params, function(data) {
         success(data.locations, data.count);
@@ -2718,6 +2768,14 @@ Paho.MQTT = (function (global) {
       }
     };
 
+    Wia.logs.unsubscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.unsubscribe("devices/" + data.device + "/logs/" + data.level, callback);
+      } else {
+        Wia.stream.unsubscribe("devices/" + data.device + "/logs/+", callback);
+      }
+    };
+
     Wia.logs.list = function(params, success, failure) {
       Wia._restClient._get('logs', params, function(data) {
         success(data.logs, data.count);
@@ -2743,8 +2801,8 @@ Paho.MQTT = (function (global) {
     Wia.organisations = Wia.organisations || {};
 
     Wia.organisations.retrieve = function(organisationId, success, failure) {
-      Wia._restClient._get('organisations/' + organisationId, {}, function(user) {
-        success(user);
+      Wia._restClient._get('organisations/' + organisationId, {}, function(organisation) {
+        success(organisation);
       }, function(response) {
         failure(response);
       });
@@ -2771,6 +2829,14 @@ Paho.MQTT = (function (global) {
         Wia.stream.subscribe("devices/" + data.device + "/sensors/" + data.name, callback);
       } else {
         Wia.stream.subscribe("devices/" + data.device + "/sensors/+", callback);
+      }
+    };
+
+    Wia.sensors.unsubscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.unsubscribe("devices/" + data.device + "/sensors/" + data.name, callback);
+      } else {
+        Wia.stream.unsubscribe("devices/" + data.device + "/sensors/+", callback);
       }
     };
 

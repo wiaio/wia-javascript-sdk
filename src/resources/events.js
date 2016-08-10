@@ -21,6 +21,14 @@
       }
     };
 
+    Wia.events.unsubscribe = function(data, callback) {
+      if (data.name) {
+        Wia.stream.unsubscribe("devices/" + data.device + "/events/" + data.name, callback);
+      } else {
+        Wia.stream.unsubscribe("devices/" + data.device + "/events/+", callback);
+      }
+    };
+
     Wia.events.list = function(params, success, failure) {
       Wia._restClient._get('events', params, function(data) {
         success(data.events, data.count);

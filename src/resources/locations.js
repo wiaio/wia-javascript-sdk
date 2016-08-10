@@ -17,6 +17,10 @@
       Wia.stream.subscribe("devices/" + data.device + "/locations", callback);
     };
 
+    Wia.locations.unsubscribe = function(data, callback) {
+      Wia.stream.unsubscribe("devices/" + data.device + "/locations", callback);
+    };
+
     Wia.locations.list = function(params, success, failure) {
       Wia._restClient._get('locations', params, function(data) {
         success(data.locations, data.count);

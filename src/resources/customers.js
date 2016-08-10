@@ -13,9 +13,41 @@
      */
     Wia.customers = Wia.customers || {};
 
+    Wia.customers.create = function(data, success, failure) {
+      Wia._restClient._post('customers', data, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
     Wia.customers.retrieve = function(customerId, success, failure) {
       Wia._restClient._get('customers/' + customerId, {}, function(customer) {
         success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.update = function(customerId, data, success, failure) {
+      Wia._restClient._put('customers/' + customerId, data, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.delete = function(customerId, success, failure) {
+      Wia._restClient._delete('customers/' + customerId, function(data) {
+        success(data);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
+    Wia.customers.list = function(params, success, failure) {
+      Wia._restClient._get('customers', params, function(data) {
+        success(data);
       }, function(response) {
         failure(response);
       });
