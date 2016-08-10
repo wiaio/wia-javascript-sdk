@@ -3,7 +3,7 @@
 ## Installing
 Add the following to the head of your website:
 
-<script type="text/javascript" src="https://cdn.wia.io/js/dist/wia.js"></script>
+<script type="text/javascript" src="https://cdn.wia.io/sdk/js/v1/wia.min.js"></script>
 
 ## Documentation
 For full documentation visit [http://docs.wia.io/](http://docs.wia.io/)

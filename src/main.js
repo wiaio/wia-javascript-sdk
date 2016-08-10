@@ -21,7 +21,7 @@ window.console.log = this.console.log || function() {};
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "js1.0.0";
+  root.Wia.VERSION = "0.1.0";
 }(this));
 
 /**
