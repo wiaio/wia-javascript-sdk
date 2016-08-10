@@ -98,21 +98,27 @@
     };
 
     function addRequestHeaders(xhr) {
-      if (Wia.secretKey)
+      if (Wia.secretKey) {
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.secretKey);
-      if (Wia.accessToken)
+      }
+
+      if (Wia.accessToken) {
         xhr.setRequestHeader("Authorization", "Bearer " + Wia.accessToken);
-      if (Wia.appKey)
+      }
+
+      if (Wia.appKey) {
         xhr.setRequestHeader("x-app-key", Wia.appKey);
+      }
       return xhr;
     }
 
     function serializeParameters(obj) {
       var str = [];
-      for(var p in obj)
+      for(var p in obj) {
         if (obj.hasOwnProperty(p)) {
           str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-        }
+        }        
+      }
       return str.join("&");
     }
 }(this));

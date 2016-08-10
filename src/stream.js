@@ -124,23 +124,23 @@
     Wia.stream.disconnect = function() {
       Wia.stream.connected = false;
       mqttClient.disconnect();
-    }
+    };
 
     Wia.stream.subscribe = function(topic, cb) {
       subscribeCallbacks[topic] = cb;
       mqttClient.subscribe(topic, {
         qos: 0
       });
-    }
+    };
 
     Wia.stream.unsubscribe = function(topic, cb) {
       delete subscribeCallbacks[topic];
       mqttClient.unsubscribe(topic);
-    }
+    };
 
     Wia.stream.publish = function(topic, data, cb) {
       var message = new Paho.MQTT.Message(data);
       message.destinationName = topic;
       mqttClient.publish(message);
-    }
+    };
 }(this));

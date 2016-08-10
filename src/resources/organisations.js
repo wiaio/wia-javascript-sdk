@@ -14,8 +14,8 @@
     Wia.organisations = Wia.organisations || {};
 
     Wia.organisations.retrieve = function(organisationId, success, failure) {
-      Wia._restClient._get('organisations/' + organisationId, {}, function(user) {
-        success(user);
+      Wia._restClient._get('organisations/' + organisationId, {}, function(organisation) {
+        success(organisation);
       }, function(response) {
         failure(response);
       });
