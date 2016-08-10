@@ -13,10 +13,12 @@
      */
     Wia.devices = Wia.devices || {};
 
-    Wia.devices.create = function(data, callback) {
-      if (callback) {
-        callback(data);
-      }
+    Wia.devices.create = function(data, success, failure) {
+      Wia._restClient._post('devices', data, function(device) {
+        success(device);
+      }, function(response) {
+        failure(response);
+      });
     };
 
     Wia.devices.retrieve = function(deviceId, success, failure) {

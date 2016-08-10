@@ -13,6 +13,14 @@
      */
     Wia.customers = Wia.customers || {};
 
+    Wia.customers.retrieve = function(customerId, success, failure) {
+      Wia._restClient._get('customers/' + customerId, {}, function(customer) {
+        success(customer);
+      }, function(response) {
+        failure(response);
+      });
+    };
+
     Wia.customers.signup = function(data, success, failure) {
       Wia._restClient._post('customers/signup', data, function(customer) {
         success(customer);
