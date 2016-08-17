@@ -25,6 +25,7 @@ var exec = require('child_process').exec;
 var sys = require('sys');
 var tasklist = require('gulp-task-listing');
 var runSequence = require('run-sequence');
+var inject = require('gulp-inject-string');
 
 var PROJECT_BASE_PATH = __dirname + '';
 
@@ -49,6 +50,7 @@ gulp.task('build', ['clean'], function (cb) {
         .pipe(concat(pkg.name + '-' + pkg.version + '.js'))
         .pipe(gulp.dest('./dist'))
         .pipe(rename(pkg.name + '-' + pkg.version + '.min.js'))
+        .pipe(inject.append('/*! Wia SDK for Javascript v' + pkg.version + ' | Wia Technologies Limited | wia.io */'))
         .pipe(uglify())
         .pipe(size({showFiles:true}))
         .pipe(gulp.dest('./dist'));

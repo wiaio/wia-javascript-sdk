@@ -1,6 +1,6 @@
 {
   "name": "wia-javascript-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Conall Laverty <team@wia.io>",
   "description": "Wia Javascript SDK",
   "repository": {
@@ -11,7 +11,9 @@
     "sdk",
     "wia",
     "api",
-    "javascript"
+    "javascript",
+    "iot",
+    "mqtt"
   ],
   "dependencies": {
     "colors": "^0.6.2",
@@ -20,6 +22,7 @@
     "gulp-clean": "^0.2.4",
     "gulp-concat": "~2.1.7",
     "gulp-debug": "^0.1.2",
+    "gulp-inject-string": "^1.1.0",
     "gulp-jshint": "^1.12.0",
     "gulp-notify": "^1.8.0",
     "gulp-rename": "^0.2.2",
