@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Usage example for the Wia Javascript SDK</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <script src="../dist/wia-javascript-sdk-0.1.0.js"></script>
+    <script>
+        Wia.initialize({
+          secretKey: "d_sk_07qttb8vFOrf60zrBmEyAN1P"
+        });
+
+        Wia.devices.retrieve("deviceId", function(device) {
+          console.log(device);
+          console.log(device.name);
+        }, function(error) {
+          console.log(error);
+        });
+    </script>
+    <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
+    <script>
+      function showData() {
+       var code = document.getElementById('rawData');
+       var button = document.getElementById('showDataButton');
+       if (code.style.display !== 'none') {
+         code.style.display  = 'none';
+       }
+       else {
+         code.style.display  = 'block';
+         button.style.display= 'none';
+       }
+      }
+
+      var app = angular.module("myWeatherApp", []);
+      app.controller("weatherCtrl", function($scope) {
+        $scope.location      = "Dublin 8, Dublin";
+        $scope.time          = "1440597871654";
+        $scope.temperature   = "19" + "°";
+        $scope.precipitation = "0" + "%";
+        $scope.humidity      = "74" + "%";
+        $scope.wind          = "35" + "km/h";
+      });
+    </script>
+    <style>
+      .panel {
+        margin-top: 20px;
+      }
+      .panel-heading {
+        text-align: center;
+      }
+      .panel-body h1{
+        font-size: 72px;
+      }
+      .secondary-weather-links {
+        margin-top: 35px;
+      }
+      .secondary-weather-links h3 {
+        text-align: right;
+        color: grey;
+        font-weight: lighter;
+      }
+      h5 {
+        font-weight: lighter;
+        font-size: 18px;
+        text-align: left
+      }
+      .row {
+        margin-bottom: 30px;
+      }
+      .fa-sun-o {
+        color: orange;
+      }
+      .fa-cloud {
+        color: lightgrey;
+      }
+      .fa-tint {
+        color: #4c4cff;
+      }
+      .fa-flag-o {
+        color: #444;
+      }
+      .buttondiv {
+        text-align: center;
+      }
+      pre {
+        text-align: left;
+      }
+    </style>
+  </head>
+<body ng-app="myWeatherApp" ng-controller="weatherCtrl">
+  <div class="container">
+    <div class="row">
+      <div class="panel panel-info">
+        <div class="panel-heading"><h1>What's the weather like in your city?</h1></div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-6 col-sm-offset-3">
+              <div class="col-sm-6">
+                <h2>{{location}}</h2>
+                <h5>Thursday 14:00</h5>
+                <h1><span class="fa fa-sun-o fa-1x"></span> {{temperature}}</h1>
+              </div>
+              <div class="col-sm-6 secondary-weather-links">
+                <h3>Precipitation: <span class="fa fa-tint fa-1x"></span> {{precipitation}}</h3>
+                <h3>Humidity: &nbsp;<span class="fa fa-cloud fa-1x"></span> {{humidity}}</h3>
+                <h3>Wind: &nbsp;<span class="fa fa-flag-o fa-1x"></span> {{wind}}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-4 col-sm-offset-4">
+            <div class="buttondiv">
+              <button id="showDataButton" class="btn btn-info" style="margin: 5px auto;" onclick="showData()">Sensor Data</button>
+            </div>
+<pre id="rawData" style="display:none;">{
+  "name": "Dublin 8",
+  "data": {
+      "temperature": "19",
+      "temperatureFormat": "celcius",
+      "humidity": 7,
+      "windspeed": 35,
+      "windspeedFormat": "km/h",
+      "precipitation": 0
+  },
+  "timestamp": 1440597871654
+}</pre>
+<p style="text-align:center; margin-top: 50px;"> powered by </br><img src="http://docs.wia.io/images/logo.svg" style="height:25px; margin-top: 8px;"/></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

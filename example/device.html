@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0px;
+    }
+    .device {
+      background-color: #EEEEEE;
+      border-radius: 5px;
+      margin: 20px auto;
+      padding: 10px;
+      width: 300px;
+      border: 1px solid #DDDDDD;
+
+    }
+  </style>
+  <title>View Device | Example</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+  <!-- <script src="https://cdn.wia.io/sdk/js/v1/wia.min.js"></script> -->
+  <script src="../dist/wia-javascript-sdk-0.1.0.js"></script>
+  <script>
+      Wia.initialize({
+        // Application Key from Organisation Dashboard at https://dashboard.wia.io/manageOrganisation/applications
+        appKey: "your application key"
+      });
+
+      Wia.devices.retrieve("your device key", function(device) {
+        var deviceData = "<h3>" + device.name + "</h3>" + "<br>" + device.id + "<br>" ;
+        document.getElementById("device").innerHTML = deviceData;// injecting your device data into the HTML
+        document.getElementById("userprofile").innerHTML = "Your Name Here";// injecting your customers name into navbar
+      }, function(error) {
+        console.log(error);
+      });
+  </script>
+</head>
+<body>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Device</a></li>
+        <li><a href="device-list.html">Device List</a></li>
+        <li><a href="login.html">Logout</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#" id="userprofile"></a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="panel panel-default" style="text-align: center;">
+        <div class="panel-heading"><h1>View Device</h1></div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="device" id="device">
+              <!-- Your retrieved devices are injected here -->
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-4 col-sm-offset-4">
+              <p style="text-align:center; margin-top: 50px;">powered by</br><img src="http://docs.wia.io/images/logo.svg" style="height:25px; margin-top: 8px; margin-right: 1px;"/></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

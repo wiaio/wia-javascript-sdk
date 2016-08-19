@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0px;
+      padding: 30px
+    }
+  </style>
+  <title>Signup | Example</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+  <!-- <script src="https://cdn.wia.io/sdk/js/v1/wia.min.js"></script> -->
+  <script src="../dist/wia-javascript-sdk-0.1.0.js"></script>
+  <script>
+    function signupFunction() {
+      Wia.initialize({
+        // Application Key from Organisation Dashboard at https://dashboard.wia.io/manageOrganisation/applications
+        appKey: "your application key"
+      });
+
+      var formData = document.getElementById("signupForm");
+
+      var fullName = formData.elements[0].value; // gets the form value for fullName
+      var email = formData.elements[1].value; // gets the form value for email
+      var password = formData.elements[2].value; // gets the form value for password *** Note: Password Length must be 8 or more ***
+
+      // signup function
+      Wia.customers.signup({
+        fullName: fullName,
+        email: email,
+        password: password
+      }, function(customer) {
+        console.log(customer);
+        Wia.customers.login({
+          username: email,
+          password: password
+        }, function(accessToken) {
+          console.log(accessToken);
+        });
+      }, function(error) {
+        console.log(error);
+      });
+    }// end function signupFunction
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3">
+        <div class="panel panel-default" style="text-align: center;">
+          <div class="panel-heading"><h1>Sign Up</h1></div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-sm-10 col-sm-offset-1">
+                <form id="signupForm">
+                  <div class="form-group">
+                    <input type="text" name="fullname" class="form-control" placeholder="Full Name">
+                  </div>
+                  <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email">
+                  </div>
+                  <div class="form-group">
+                    <input type="password" name="password" class="form-control" placeholder="Password">
+                  </div>
+                  <button type="button" class="btn btn-default" onclick="signupFunction()">Submit</button>
+                </form>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-4 col-sm-offset-4">
+                <p style="text-align:center; margin-top: 50px;"> powered by </br><img src="http://docs.wia.io/images/logo.svg" style="height:25px; margin-top: 8px; margin-right: 1px;"/></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
