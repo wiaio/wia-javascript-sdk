@@ -101,7 +101,7 @@
     Wia.stream.connect = function(opt) {
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
-        userName: Wia.secretKey,
+        userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: opt.useSSL || true,
         onSuccess: function() {
