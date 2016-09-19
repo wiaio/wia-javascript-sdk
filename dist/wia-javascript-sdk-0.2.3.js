@@ -21,7 +21,7 @@ window.console.log = this.console.log || function() {};
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "0.2.1";
+  root.Wia.VERSION = "0.2.3";
 }(this));
 
 /**
@@ -2418,6 +2418,9 @@ Paho.MQTT = (function (global) {
             } else if (topicAction.indexOf("locations") == 0 &&
                   typeof subscribeCallbacks["devices/" + deviceId + "/locations/+"] === "function") {
               subscribeCallbacks["devices/" + deviceId + "/locations/+"](msgObj);
+            } else if (topicAction.indexOf("sensors") == 0 &&
+                  typeof subscribeCallbacks["devices/" + deviceId + "/sensors/+"] === "function") {
+              subscribeCallbacks["devices/" + deviceId + "/sensors/+"](msgObj);
             } else if (topicAction.indexOf("commands") == 0) {
               exec(msgObj.command, function(err, stdout, stderr) {
                 if (err) {
@@ -2445,8 +2448,9 @@ Paho.MQTT = (function (global) {
     };
 
     Wia.stream.connect = function(opt) {
-      if (!opt)
+      if (!opt) {
         opt = {};
+      }
 
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
@@ -2705,7 +2709,7 @@ Paho.MQTT = (function (global) {
       if (deviceId && Wia.stream && Wia.stream.connected) {
         Wia.stream.publish('devices/' + deviceId + '/functions/' + functionId + '/call', opt.data ? JSON.stringify(opt.data) : null, success);
       } else {
-        Wia._restClient._post("functions/" + functionId + "/call", params, function(data) {
+        Wia._restClient._post("functions/" + functionId + "/call", opt, function(data) {
           success(data);
         }, function(response) {
           failure(response);

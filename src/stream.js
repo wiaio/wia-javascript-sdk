@@ -72,6 +72,9 @@
             } else if (topicAction.indexOf("locations") == 0 &&
                   typeof subscribeCallbacks["devices/" + deviceId + "/locations/+"] === "function") {
               subscribeCallbacks["devices/" + deviceId + "/locations/+"](msgObj);
+            } else if (topicAction.indexOf("sensors") == 0 &&
+                  typeof subscribeCallbacks["devices/" + deviceId + "/sensors/+"] === "function") {
+              subscribeCallbacks["devices/" + deviceId + "/sensors/+"](msgObj);
             } else if (topicAction.indexOf("commands") == 0) {
               exec(msgObj.command, function(err, stdout, stderr) {
                 if (err) {
@@ -100,7 +103,7 @@
 
     Wia.stream.connect = function(opt) {
       if (!opt) {
-        opt = {};        
+        opt = {};
       }
 
       mqttClient.connect({
