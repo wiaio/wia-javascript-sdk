@@ -2445,6 +2445,9 @@ Paho.MQTT = (function (global) {
     };
 
     Wia.stream.connect = function(opt) {
+      if (!opt)
+        opt = {};
+
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey || Wia.appKey,
@@ -2452,14 +2455,12 @@ Paho.MQTT = (function (global) {
         useSSL: opt.useSSL || true,
         onSuccess: function() {
           Wia.stream.connected = true;
-          console.log("onSuccess");
           if (opt && opt.onSuccess) {
             opt.onSuccess();
           }
         },
         onFailure: function(err) {
           Wia.stream.connected = false;
-          console.log("onFailure");
           if (opt && opt.onFailure) {
             opt.onFailure(err);
           }

@@ -39,7 +39,7 @@
       if (deviceId && Wia.stream && Wia.stream.connected) {
         Wia.stream.publish('devices/' + deviceId + '/functions/' + functionId + '/call', opt.data ? JSON.stringify(opt.data) : null, success);
       } else {
-        Wia._restClient._post("functions/" + functionId + "/call", params, function(data) {
+        Wia._restClient._post("functions/" + functionId + "/call", opt, function(data) {
           success(data);
         }, function(response) {
           failure(response);
