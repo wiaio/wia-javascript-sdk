@@ -1,6 +1,6 @@
 {
   "name": "wia-javascript-sdk",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "author": "Conall Laverty <team@wia.io>",
   "description": "Wia Javascript SDK",
   "repository": {

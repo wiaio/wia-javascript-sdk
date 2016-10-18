@@ -16,6 +16,7 @@
     Wia.stream = Wia.stream || {};
 
     var STREAM_TIMEOUT = 15;
+    var CONNECT_TIMEOUT = 1500;
 
     Wia.stream.connected = false;
 
@@ -28,6 +29,23 @@
       if (Wia.stream.onConnectionLost) {
         Wia.stream.onConnectionLost(response);
       }
+
+      setTimeout(function() {
+        console.log("Attempting reconnect...");
+        mqttClient.connect({
+          onSuccess: function() {
+            console.log("Reconnected.");
+            for (var topic in subscribeCallbacks) {
+              if (subscribeCallbacks.hasOwnProperty(topic)) {
+                mqttClient.subscribe(topic);
+              }
+            }
+          },
+          onFailure: function() {
+            console.log("Could not reconnect.");
+          }
+        }, CONNECT_TIMEOUT);
+      });
     };
 
     mqttClient.onMessageArrived = function(message) {
@@ -72,6 +90,9 @@
             } else if (topicAction.indexOf("locations") == 0 &&
                   typeof subscribeCallbacks["devices/" + deviceId + "/locations/+"] === "function") {
               subscribeCallbacks["devices/" + deviceId + "/locations/+"](msgObj);
+            } else if (topicAction.indexOf("sensors") == 0 &&
+                  typeof subscribeCallbacks["devices/" + deviceId + "/sensors/+"] === "function") {
+              subscribeCallbacks["devices/" + deviceId + "/sensors/+"](msgObj);
             } else if (topicAction.indexOf("commands") == 0) {
               exec(msgObj.command, function(err, stdout, stderr) {
                 if (err) {
@@ -99,21 +120,23 @@
     };
 
     Wia.stream.connect = function(opt) {
+      if (!opt) {
+        opt = {};
+      }
+
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
-        userName: Wia.secretKey,
+        userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: opt.useSSL || true,
         onSuccess: function() {
           Wia.stream.connected = true;
-          console.log("onSuccess");
           if (opt && opt.onSuccess) {
             opt.onSuccess();
           }
         },
         onFailure: function(err) {
           Wia.stream.connected = false;
-          console.log("onFailure");
           if (opt && opt.onFailure) {
             opt.onFailure(err);
           }
@@ -128,14 +151,29 @@
 
     Wia.stream.subscribe = function(topic, cb) {
       subscribeCallbacks[topic] = cb;
-      mqttClient.subscribe(topic, {
-        qos: 0
-      });
+      if (Wia.stream.connected) {
+        mqttClient.subscribe(topic, {
+          qos: 0
+        });
+      }
     };
 
     Wia.stream.unsubscribe = function(topic, cb) {
       delete subscribeCallbacks[topic];
-      mqttClient.unsubscribe(topic);
+      if (Wia.stream.connected) {
+        mqttClient.unsubscribe(topic);
+      }
+    };
+
+    Wia.stream.unsubscribeAll = function(topic, cb) {
+      for (var topic in subscribeCallbacks) {
+        if (subscribeCallbacks.hasOwnProperty(topic)) {
+          if (Wia.stream.connected) {
+            mqttClient.unsubscribe(topic);
+          }
+          delete subscribeCallbacks[topic];
+        }
+      }
     };
 
     Wia.stream.publish = function(topic, data, cb) {
