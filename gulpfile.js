@@ -47,9 +47,9 @@ gulp.task('build', ['clean'], function (cb) {
     var pkg = require('./package.json');
 
     return gulp.src(['./src/*.js','./src/resources/*.js'])
-        .pipe(concat(pkg.name + '-' + pkg.version + '.js'))
+        .pipe(concat('wia.js'))
         .pipe(gulp.dest('./dist'))
-        .pipe(rename(pkg.name + '-' + pkg.version + '.min.js'))
+        .pipe(rename('wia.min.js'))
         .pipe(inject.append('/*! Wia SDK for Javascript v' + pkg.version + ' | Wia Technologies Limited | wia.io */'))
         .pipe(uglify())
         .pipe(size({showFiles:true}))

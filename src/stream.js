@@ -22,7 +22,7 @@
 
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client(Wia.socketApiHost, Wia.socketApiPort, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, Wia.streamApi.port, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
       Wia.stream.connected = false;
@@ -128,7 +128,13 @@
         timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
-        useSSL: opt.useSSL || true,
+        useSSL: Wia.streamApi.useSecure,
+        hosts: [
+          Wia.streamApi.host
+        ],
+        ports: [
+          Wia.streamApi.port
+        ],
         onSuccess: function() {
           Wia.stream.connected = true;
           if (opt && opt.onSuccess) {

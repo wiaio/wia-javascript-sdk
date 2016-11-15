@@ -13,15 +13,13 @@
  * @private
  * @type object
  */
-window.console = window.console || {};
-window.console.log = this.console.log || function() {};
 
 /**
  * expose our sdk
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "0.2.4";
+  root.Wia.VERSION = "0.2.5";
 }(this));
 
 /**
@@ -45,14 +43,14 @@ window.console.log = this.console.log || function() {};
         Wia.$ = root.$;
     }
 
-    // Set the rest server for Wia.
-    Wia.restApiBase = "https://api.wia.io/v1/";
+    Wia.restApiEndpoint = "https://api.wia.io/v1/"
 
-    // Set the socket host for Wia.
-    Wia.socketApiHost = "api.wia.io";
-
-    // Set the socket host for Wia.
-    Wia.socketApiPort = 3001;
+    Wia.streamApi = {
+      protocol: "wss",
+      host: "api.wia.io",
+      port: 3001,
+      useSecure: true
+    }
 
     /**
      * Call this method first to set your authentication key.
@@ -70,7 +68,7 @@ window.console.log = this.console.log || function() {};
       Wia.appKey = options.appKey || null;
       Wia.secretKey = options.secretKey || null;
       Wia.accessToken = options.accessToken || null;
-      Wia.restApiBase = options.restApiBase || Wia.restApiBase;
-      Wia.socketApiEndpoint = options.socketApiEndpoint || Wia.socketApiEndpoint;
+      Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
+      Wia.streamApi = options.streamApi || Wia.streamApi;
     };
 }(this));

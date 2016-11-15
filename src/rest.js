@@ -17,7 +17,7 @@
 
     Wia._restClient._get = function(path, params, success, failure) {
       var xhr = new XMLHttpRequest();
-      var url = Wia.restApiBase + path;
+      var url = Wia.restApiEndpoint + path;
       if (params) {
         url += "?" + serializeParameters(params);
       }
@@ -40,7 +40,7 @@
 
     Wia._restClient._post = function(path, data, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('post', Wia.restApiBase + path, true);
+      xhr.open('post', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.responseType = 'json';
@@ -60,7 +60,7 @@
 
     Wia._restClient._put = function(path, data, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('put', Wia.restApiBase + path, true);
+      xhr.open('put', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.responseType = 'json';
@@ -80,7 +80,7 @@
 
     Wia._restClient._delete = function(path, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('delete', Wia.restApiBase + path, true);
+      xhr.open('delete', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.responseType = 'json';
       xhr.onload = function() {
@@ -117,7 +117,7 @@
       for(var p in obj) {
         if (obj.hasOwnProperty(p)) {
           str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-        }        
+        }
       }
       return str.join("&");
     }
