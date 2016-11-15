@@ -13,15 +13,13 @@
  * @private
  * @type object
  */
-window.console = window.console || {};
-window.console.log = this.console.log || function() {};
 
 /**
  * expose our sdk
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "0.2.3";
+  root.Wia.VERSION = "0.2.5";
 }(this));
 
 /**
@@ -45,14 +43,14 @@ window.console.log = this.console.log || function() {};
         Wia.$ = root.$;
     }
 
-    // Set the rest server for Wia.
-    Wia.restApiBase = "https://api.wia.io/v1/";
+    Wia.restApiEndpoint = "https://api.wia.io/v1/"
 
-    // Set the socket host for Wia.
-    Wia.socketApiHost = "api.wia.io";
-
-    // Set the socket host for Wia.
-    Wia.socketApiPort = 3001;
+    Wia.streamApi = {
+      protocol: "wss",
+      host: "api.wia.io",
+      port: 3001,
+      useSecure: true
+    }
 
     /**
      * Call this method first to set your authentication key.
@@ -70,8 +68,8 @@ window.console.log = this.console.log || function() {};
       Wia.appKey = options.appKey || null;
       Wia.secretKey = options.secretKey || null;
       Wia.accessToken = options.accessToken || null;
-      Wia.restApiBase = options.restApiBase || Wia.restApiBase;
-      Wia.socketApiEndpoint = options.socketApiEndpoint || Wia.socketApiEndpoint;
+      Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
+      Wia.streamApi = options.streamApi || Wia.streamApi;
     };
 }(this));
 
@@ -2238,7 +2236,7 @@ Paho.MQTT = (function (global) {
 
     Wia._restClient._get = function(path, params, success, failure) {
       var xhr = new XMLHttpRequest();
-      var url = Wia.restApiBase + path;
+      var url = Wia.restApiEndpoint + path;
       if (params) {
         url += "?" + serializeParameters(params);
       }
@@ -2261,7 +2259,7 @@ Paho.MQTT = (function (global) {
 
     Wia._restClient._post = function(path, data, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('post', Wia.restApiBase + path, true);
+      xhr.open('post', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.responseType = 'json';
@@ -2281,7 +2279,7 @@ Paho.MQTT = (function (global) {
 
     Wia._restClient._put = function(path, data, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('put', Wia.restApiBase + path, true);
+      xhr.open('put', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.responseType = 'json';
@@ -2301,7 +2299,7 @@ Paho.MQTT = (function (global) {
 
     Wia._restClient._delete = function(path, success, failure) {
       var xhr = new XMLHttpRequest();
-      xhr.open('delete', Wia.restApiBase + path, true);
+      xhr.open('delete', Wia.restApiEndpoint + path, true);
       xhr = addRequestHeaders(xhr);
       xhr.responseType = 'json';
       xhr.onload = function() {
@@ -2338,7 +2336,7 @@ Paho.MQTT = (function (global) {
       for(var p in obj) {
         if (obj.hasOwnProperty(p)) {
           str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-        }        
+        }
       }
       return str.join("&");
     }
@@ -2368,7 +2366,7 @@ Paho.MQTT = (function (global) {
 
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client(Wia.socketApiHost, Wia.socketApiPort, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, Wia.streamApi.port, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
       Wia.stream.connected = false;
@@ -2469,12 +2467,29 @@ Paho.MQTT = (function (global) {
       if (!opt) {
         opt = {};
       }
-
+console.log({
+  timeout: STREAM_TIMEOUT,
+  userName: Wia.secretKey || Wia.appKey,
+  password: " ",
+  useSSL: Wia.streamApi.useSecure,
+  hosts: [
+    Wia.streamApi.protocol + "://" + Wia.streamApi.host
+  ],
+  ports: [
+    Wia.streamApi.port
+  ]
+});
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
-        useSSL: opt.useSSL || true,
+        useSSL: Wia.streamApi.useSecure,
+        hosts: [
+          Wia.streamApi.host
+        ],
+        ports: [
+          Wia.streamApi.port
+        ],
         onSuccess: function() {
           Wia.stream.connected = true;
           if (opt && opt.onSuccess) {
