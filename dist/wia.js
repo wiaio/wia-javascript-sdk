@@ -2467,29 +2467,12 @@ Paho.MQTT = (function (global) {
       if (!opt) {
         opt = {};
       }
-console.log({
-  timeout: STREAM_TIMEOUT,
-  userName: Wia.secretKey || Wia.appKey,
-  password: " ",
-  useSSL: Wia.streamApi.useSecure,
-  hosts: [
-    Wia.streamApi.protocol + "://" + Wia.streamApi.host
-  ],
-  ports: [
-    Wia.streamApi.port
-  ]
-});
+
       mqttClient.connect({
         timeout: STREAM_TIMEOUT,
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: Wia.streamApi.useSecure,
-        hosts: [
-          Wia.streamApi.host
-        ],
-        ports: [
-          Wia.streamApi.port
-        ],
         onSuccess: function() {
           Wia.stream.connected = true;
           if (opt && opt.onSuccess) {
