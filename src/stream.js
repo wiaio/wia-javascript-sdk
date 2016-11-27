@@ -129,12 +129,6 @@
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: Wia.streamApi.useSecure,
-        hosts: [
-          Wia.streamApi.host
-        ],
-        ports: [
-          Wia.streamApi.port
-        ],
         onSuccess: function() {
           Wia.stream.connected = true;
           if (opt && opt.onSuccess) {
