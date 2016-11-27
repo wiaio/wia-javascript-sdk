@@ -19,7 +19,7 @@
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "0.2.5";
+  root.Wia.VERSION = "0.2.6";
 }(this));
 
 /**
