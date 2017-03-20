@@ -12,11 +12,12 @@
     </style>
     <title>Usage example for the Wia Javascript SDK</title>
     <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <!-- <script src="../dist/wia.min.js"></script> -->
     <script src="https://cdn.wia.io/sdk/js/v1/wia.min.js"></script>
 
     <script>
         Wia.initialize({
-          secretKey: "secretKey"
+          secretKey: "secretKey",
         });
 
         Wia.stream.onConnectionLost = function(response) {
@@ -28,12 +29,16 @@
           onSuccess: function() {
             console.log("Browser success");
             console.log(Wia.stream.connected);
-            // Wia.events.subscribe({
-            //   device: "device"
-            // }, function(event) {
-            //   console.log("Got event!");
-            //   console.log(event);
-            // });
+
+            setInterval(function() {
+              Wia.events.publish({
+                name: "testEvent",
+                data: new Date().getTime()
+              }, function(event) {
+                console.log("Got event!");
+                console.log(event);
+              });
+            }, 1500);
           },
           onFailure: function(err) {
             console.log("Browser failure");

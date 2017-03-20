@@ -15,14 +15,11 @@
      */
     Wia.stream = Wia.stream || {};
 
-    var STREAM_TIMEOUT = 15;
-    var CONNECT_TIMEOUT = 1500;
-
     Wia.stream.connected = false;
 
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, Wia.streamApi.port, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, 3000, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
       Wia.stream.connected = false;
@@ -44,7 +41,7 @@
           onFailure: function() {
             console.log("Could not reconnect.");
           }
-        }, CONNECT_TIMEOUT);
+        }, Wia.streamApi.connectTimeout);
       });
     };
 
@@ -125,7 +122,7 @@
       }
 
       mqttClient.connect({
-        timeout: STREAM_TIMEOUT,
+        timeout: Wia.streamApi.streamTimeout,
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: Wia.streamApi.useSecure,
@@ -179,6 +176,6 @@
     Wia.stream.publish = function(topic, data, cb) {
       var message = new Paho.MQTT.Message(data);
       message.destinationName = topic;
-      mqttClient.publish(message);
+      mqttClient.send(message);
     };
 }(this));

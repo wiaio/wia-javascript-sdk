@@ -29,6 +29,18 @@
       }
     };
 
+    Wia.logs.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/logs/' + opt.level, opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
+      }
+    };
+
     Wia.logs.list = function(params, success, failure) {
       Wia._restClient._get('logs', params, function(data) {
         success(data.logs, data.count);

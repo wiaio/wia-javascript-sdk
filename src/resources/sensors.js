@@ -29,6 +29,18 @@
       }
     };
 
+    Wia.sensors.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/sensors/' + opt.name, opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
+      }
+    };
+
     Wia.sensors.list = function(params, success, failure) {
       Wia._restClient._get('sensors', params, function(data) {
         success(data.sensors, data.count);

@@ -49,15 +49,19 @@
       protocol: "wss",
       host: "api.wia.io",
       port: 3001,
-      useSecure: true
+      useSecure: true,
+      connectTimeout: 1500,
+      streamTimeout: 15
     }
+
+    Wia.clientInfo = null;
 
     /**
      * Call this method first to set your authentication key.
      * @param {String} API Token
      */
     Wia.initialize = function(options) {
-        Wia._initialize(options);
+      Wia._initialize(options);
     };
 
     /**
@@ -69,7 +73,23 @@
       Wia.secretKey = options.secretKey || null;
       Wia.accessToken = options.accessToken || null;
       Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
-      Wia.streamApi = options.streamApi || Wia.streamApi;
+
+      for (var k in options.streamApi) {
+        if (options.streamApi.hasOwnProperty(k)) {
+           Wia.streamApi[k] = options.streamApi[k];
+        }
+      }
+
+      if (Wia.secretKey || Wia.accessToken) {
+        intervalId = setInterval(function () {
+          Wia._restClient._get("whoami", {}, function(data) {
+            Wia.clientInfo = data;
+            clearInterval(intervalId);
+          }, function(response) {
+            console.log(response);
+          });
+        }, 1250);
+      }
     };
 }(this));
 
@@ -2359,14 +2379,11 @@ Paho.MQTT = (function (global) {
      */
     Wia.stream = Wia.stream || {};
 
-    var STREAM_TIMEOUT = 15;
-    var CONNECT_TIMEOUT = 1500;
-
     Wia.stream.connected = false;
 
     var subscribeCallbacks = {};
 
-    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, Wia.streamApi.port, "/", "");
+    var mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, 3000, "/", "");
 
     mqttClient.onConnectionLost = function(response) {
       Wia.stream.connected = false;
@@ -2388,7 +2405,7 @@ Paho.MQTT = (function (global) {
           onFailure: function() {
             console.log("Could not reconnect.");
           }
-        }, CONNECT_TIMEOUT);
+        }, Wia.streamApi.connectTimeout);
       });
     };
 
@@ -2469,7 +2486,7 @@ Paho.MQTT = (function (global) {
       }
 
       mqttClient.connect({
-        timeout: STREAM_TIMEOUT,
+        timeout: Wia.streamApi.streamTimeout,
         userName: Wia.secretKey || Wia.appKey,
         password: " ",
         useSSL: Wia.streamApi.useSecure,
@@ -2523,7 +2540,7 @@ Paho.MQTT = (function (global) {
     Wia.stream.publish = function(topic, data, cb) {
       var message = new Paho.MQTT.Message(data);
       message.destinationName = topic;
-      mqttClient.publish(message);
+      mqttClient.send(message);
     };
 }(this));
 
@@ -2710,6 +2727,18 @@ Paho.MQTT = (function (global) {
       }
     };
 
+    Wia.events.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/events/' + opt.name, opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
+      }
+    };
+
     Wia.events.list = function(params, success, failure) {
       Wia._restClient._get('events', params, function(data) {
         success(data.events, data.count);
@@ -2792,6 +2821,18 @@ Paho.MQTT = (function (global) {
       Wia.stream.unsubscribe("devices/" + data.device + "/locations", callback);
     };
 
+    Wia.locations.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/locations/', opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
+      }
+    };
+
     Wia.locations.list = function(params, success, failure) {
       Wia._restClient._get('locations', params, function(data) {
         success(data.locations, data.count);
@@ -2829,6 +2870,18 @@ Paho.MQTT = (function (global) {
         Wia.stream.unsubscribe("devices/" + data.device + "/logs/" + data.level, callback);
       } else {
         Wia.stream.unsubscribe("devices/" + data.device + "/logs/+", callback);
+      }
+    };
+
+    Wia.logs.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/logs/' + opt.level, opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
       }
     };
 
@@ -2893,6 +2946,18 @@ Paho.MQTT = (function (global) {
         Wia.stream.unsubscribe("devices/" + data.device + "/sensors/" + data.name, callback);
       } else {
         Wia.stream.unsubscribe("devices/" + data.device + "/sensors/+", callback);
+      }
+    };
+
+    Wia.sensors.publish = function(opt, callback) {
+      if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
+        Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/sensors/' + opt.name, opt ? JSON.stringify(opt) : null, callback);
+      } else {
+        Wia._restClient._post("events", opt, function(data) {
+          callback(data);
+        }, function(response) {
+          callback(response);
+        });
       }
     };
 

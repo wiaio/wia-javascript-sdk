@@ -19,7 +19,7 @@
  */
 (function(root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "0.2.6";
+  root.Wia.VERSION = "1.0.0";
 }(this));
 
 /**
@@ -49,15 +49,19 @@
       protocol: "wss",
       host: "api.wia.io",
       port: 3001,
-      useSecure: true
+      useSecure: true,
+      connectTimeout: 1500,
+      streamTimeout: 15
     }
+
+    Wia.clientInfo = null;
 
     /**
      * Call this method first to set your authentication key.
      * @param {String} API Token
      */
     Wia.initialize = function(options) {
-        Wia._initialize(options);
+      Wia._initialize(options);
     };
 
     /**
@@ -69,6 +73,22 @@
       Wia.secretKey = options.secretKey || null;
       Wia.accessToken = options.accessToken || null;
       Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
-      Wia.streamApi = options.streamApi || Wia.streamApi;
+
+      for (var k in options.streamApi) {
+        if (options.streamApi.hasOwnProperty(k)) {
+           Wia.streamApi[k] = options.streamApi[k];
+        }
+      }
+
+      if (Wia.secretKey || Wia.accessToken) {
+        intervalId = setInterval(function () {
+          Wia._restClient._get("whoami", {}, function(data) {
+            Wia.clientInfo = data;
+            clearInterval(intervalId);
+          }, function(response) {
+            console.log(response);
+          });
+        }, 1250);
+      }
     };
 }(this));
