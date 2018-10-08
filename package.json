@@ -8,7 +8,7 @@
     "url": "git@github.com/wiaio/wia-javascript-sdk.git"
   },
   "scripts": {
-    "eslint": "eslint src/**/*.js"
+    "eslint": "eslint src"
   },
   "keywords": [
     "sdk",

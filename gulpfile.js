@@ -26,6 +26,30 @@ const babel = require('gulp-babel');
 const PROJECT_BASE_PATH = __dirname + '';
 
 /*
+ * helper functions
+ * ***********************************************************************************************
+ */
+
+// well display console expressions
+function puts(error, stdout, stderr) {
+  sys.puts(stdout);
+}
+
+// execute the command line command in the shell
+function executeCommand(commandLine, cb) {
+  exec(commandLine, function (error, stdout, stderr) {
+    puts(error, stdout, stderr);
+    cb(null); // will allow gulp to exit the task successfully
+  });
+}
+
+// will execute the needed stuff to bump successfully
+function bumpHelper(bumpType, cb) {
+  runSequence('npm-bump-'+bumpType, 'build', 'example-upgrade-tag', 'git-tag-commit', 'git-tag', cb);
+}
+
+
+/*
  * gulp default task
  * ***********************************************************************************************
  */
@@ -157,26 +181,3 @@ gulp.task('karma-tests', function (cb) {
 gulp.task('watch', function () {
   gulp.watch('src/**/*.js', ['build']);
 });
-
-/*
- * helper functions
- * ***********************************************************************************************
- */
-
-// execute the command line command in the shell
-function executeCommand(commandLine, cb) {
-  exec(commandLine, function (error, stdout, stderr) {
-    puts(error, stdout, stderr);
-    cb(null); // will allow gulp to exit the task successfully
-  });
-}
-
-// well display console expressions
-function puts(error, stdout, stderr) {
-  sys.puts(stdout);
-}
-
-// will execute the needed stuff to bump successfully
-function bumpHelper(bumpType, cb) {
-  runSequence('npm-bump-'+bumpType, 'build', 'example-upgrade-tag', 'git-tag-commit', 'git-tag', cb);
-}

@@ -17,80 +17,81 @@
 /**
  * expose our sdk
  */
-(function(root) {
+(function (root) {
   root.Wia = root.Wia || {};
-  root.Wia.VERSION = "1.0.0";
+  root.Wia.VERSION = '1.0.0';
 }(this));
 
 /**
  * main sdk
  */
-(function(root) {
+(function (root) {
+  root.Wia = root.Wia || {};
 
-    root.Wia = root.Wia || {};
-
-    /**
+  /**
     * Contains all Wia API classes and functions.
     * @name Wia
     * @namespace
     *
     * Contains all Wia API classes and functions.
     */
-    var Wia = root.Wia;
+  let Wia = root.Wia;
 
-    // If jQuery has been included, grab a reference to it.
-    if (typeof(root.$) !== "undefined") {
-        Wia.$ = root.$;
-    }
+  // If jQuery has been included, grab a reference to it.
+  if (typeof (root.$) !== 'undefined') {
+    Wia.$ = root.$;
+  }
 
-    Wia.restApiEndpoint = "https://api.wia.io/v1/"
+  Wia.restApiEndpoint = "https://api.wia.io/v1/"
 
-    Wia.streamApi = {
-      protocol: "wss",
-      host: "api.wia.io",
-      port: 3001,
-      useSecure: true,
-      connectTimeout: 1500,
-      streamTimeout: 15
-    }
+  Wia.streamApi = {
+    protocol: 'wss',
+    host: 'api.wia.io',
+    port: 3001,
+    useSecure: true,
+    connectTimeout: 1500,
+    streamTimeout: 15
+  };
 
-    Wia.clientInfo = null;
+  Wia.clientInfo = null;
 
-    /**
+  /**
      * Call this method first to set your authentication key.
-     * @param {String} API Token
+     * @param {String} options API Token
+     * @returns {void}
      */
-    Wia.initialize = function(options) {
-      Wia._initialize(options);
-    };
+  Wia.initialize = function (options) {
+    Wia._initialize(options);
+  };
 
-    /**
+  /**
      * This method is for Wia's own private use.
-     * @param {String} API Token
+     * @param {String} options API Token
+     * @returns {void}
      */
-    Wia._initialize = function(options) {
-      Wia.appKey = options.appKey || null;
-      Wia.secretKey = options.secretKey || null;
-      Wia.accessToken = options.accessToken || null;
-      Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
+  Wia._initialize = function (options) {
+    Wia.appKey = options.appKey || null;
+    Wia.secretKey = options.secretKey || null;
+    Wia.accessToken = options.accessToken || null;
+    Wia.restApiEndpoint = options.restApiEndpoint || Wia.restApiEndpoint;
 
-      for (var k in options.streamApi) {
-        if (options.streamApi.hasOwnProperty(k)) {
-           Wia.streamApi[k] = options.streamApi[k];
-        }
+    for (let k in options.streamApi) {
+      if (options.streamApi.hasOwnProperty(k)) {
+        Wia.streamApi[k] = options.streamApi[k];
       }
+    }
 
-      if (Wia.secretKey || Wia.accessToken) {
-        intervalId = setInterval(function () {
-          Wia._restClient._get("whoami", {}, function(data) {
-            Wia.clientInfo = data;
-            clearInterval(intervalId);
-          }, function(response) {
-            console.log(response);
-          });
-        }, 1250);
-      }
+    if (Wia.secretKey || Wia.accessToken) {
+      const intervalId = setInterval(function () {
+        Wia._restClient._get('whoami', {}, function (data) {
+          Wia.clientInfo = data;
+          clearInterval(intervalId);
+        }, function (response) {
+          console.log(response);
+        });
+      }, 1250);
+    }
 
-      Wia.stream.initialize();
-    };
+    Wia.stream.initialize();
+  };
 }(this));
