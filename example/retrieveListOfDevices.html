@@ -12,14 +12,16 @@
     </style>
     <title>Usage example for the Wia Javascript SDK</title>
     <script src="../dist/wia.min.js"></script>
+    <!-- <script src="https://cdn.wia.io/sdk/js/v1/wia.min.js"></script>  -->
     <script>
       Wia.initialize({
         secretKey: 'secretKey'
       });
 
-      Wia.devices.retrieve('deviceId', function(device) {
-        console.log(device);
-        console.log(device.name);
+      Wia.devices.list({
+        'space.id': 'spc_myspace'
+      }, function(devices, count) {
+        console.log(devices, count);
       }, function(error) {
         console.log(error);
       });

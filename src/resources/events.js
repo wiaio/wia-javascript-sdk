@@ -13,32 +13,12 @@
      */
   Wia.events = Wia.events || {};
 
-  Wia.events.subscribe = function (data, callback) {
-    if (data.name) {
-      Wia.stream.subscribe('devices/' + data.device + '/events/' + data.name, callback);
-    } else {
-      Wia.stream.subscribe('devices/' + data.device + '/events/+', callback);
-    }
-  };
-
-  Wia.events.unsubscribe = function (data, callback) {
-    if (data.name) {
-      Wia.stream.unsubscribe('devices/' + data.device + '/events/' + data.name, callback);
-    } else {
-      Wia.stream.unsubscribe('devices/' + data.device + '/events/+', callback);
-    }
-  };
-
   Wia.events.publish = function (opt, callback) {
-    if (Wia.clientInfo && Wia.clientInfo.device && Wia.stream && Wia.stream.connected) {
-      Wia.stream.publish('devices/' + Wia.clientInfo.device.id + '/events/' + opt.name, opt ? JSON.stringify(opt) : null, callback);
-    } else {
-      Wia._restClient._post('events', opt, function (data) {
-        callback(data);
-      }, function (response) {
-        callback(response);
-      });
-    }
+    Wia._restClient._post('events', opt, function (data) {
+      callback(data);
+    }, function (response) {
+      callback(response);
+    });
   };
 
   Wia.events.list = function (params, success, failure) {

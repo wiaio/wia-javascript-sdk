@@ -92,6 +92,6 @@
       }, 1250);
     }
 
-    Wia.stream.initialize();
+    // Wia.stream.initialize();
   };
 }(this));
