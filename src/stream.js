@@ -17,177 +17,84 @@
 
   Wia.stream.connected = false;
 
+  let sockets = {};
   let subscribeCallbacks = {};
 
+  Wia.stream.subscribe = function (path, cb) {
+    sockets[path] = new WebSocket(`${Wia.streamApi.protocol}://${Wia.streamApi.host}/${path}`);
+    if (cb && typeof cb === 'function') {
+      subscribeCallbacks[path] = cb;
+    }
 
-  let mqttClient = null;
-
-  Wia.stream.initialize = function () {
-    console.log(Wia.streamApi);
-
-    mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, parseInt(Wia.streamApi.port), '/', '');
-
-    mqttClient.onConnectionLost = function (response) {
-      Wia.stream.connected = false;
-      if (Wia.stream.onConnectionLost) {
-        Wia.stream.onConnectionLost(response);
-      }
-
-      setTimeout(function () {
-        console.log('Attempting reconnect...');
-        mqttClient.connect({
-          onSuccess: function () {
-            console.log('Reconnected.');
-            for (let topic in subscribeCallbacks) {
-              if (subscribeCallbacks.hasOwnProperty(topic)) {
-                mqttClient.subscribe(topic);
-              }
-            }
-          },
-          onFailure: function () {
-            console.log('Could not reconnect.');
-          }
-        }, Wia.streamApi.connectTimeout);
-      });
+    sockets[path].onopen = function () {
+      Wia.stream.connected = true;
+      console.log('Connected to stream!');
     };
 
-    mqttClient.onMessageArrived = function (message) {
-      let topic = message.destinationName;
+    sockets[path].onclose = function () {
+      Wia.stream.connected = false;
+      console.log('Not connected to stream.');
+    };
 
+    sockets[path].onerror = function (error) {
+      Wia.stream.connected = false;
+      console.log('WebSocket Error ' + error);
+      console.log('Not connected to stream.');
+    };
+
+    sockets[path].onmessage = function (e) {
+      Wia.stream.connected = true;
       try {
+        const msgObj = JSON.parse(e.data);
+        const callCallback = function () {
+          if (subscribeCallbacks[path] && typeof subscribeCallbacks[path] === 'function') {
+            console.log('Server: ' + e.data);
+            subscribeCallbacks[path](msgObj);
+          }
+        };
+
+        const topic = path;
         if (topic.indexOf('devices') === 0) {
           let topicSplit = topic.match('devices/(.*?)/(.*)');
           if (topicSplit) {
-            let deviceId = topicSplit[1];
             let topicAction = topicSplit[2];
-            let strMsg = message.payloadString;
 
-            let msgObj = null;
-            if (strMsg && strMsg.length > 0) {
-              msgObj = JSON.parse(strMsg);
-            } else {
-              msgObj = {};
+            if (topicAction.indexOf('locations') === 0) {
+              if (msgObj.type === 'location') {
+                callCallback();
+              }
+            } else if (topicAction.indexOf('events') === 0) {
+              if (msgObj.type === 'event') {
+                callCallback();
+              }
+            } else if (topicAction.indexOf('logs') === 0) {
+              if (msgObj.type === 'log') {
+                callCallback();
+              }
             }
-
-            if (topicAction.indexOf('/') >= 0) {
-              let topicActionSplit = topicAction.match('(.*?)/(.*)');
-              msgObj.type = topicActionSplit[1];
-            } else {
-              msgObj.type = topicAction;
-            }
-
-            if (subscribeCallbacks['devices/' + deviceId + '/#'] && typeof subscribeCallbacks['devices/' + deviceId + '/#'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/#'](msgObj);
-            }
-
-            if (subscribeCallbacks[topic] && typeof subscribeCallbacks[topic] === 'function') {
-              subscribeCallbacks[topic](msgObj);
-            }
-
-            if (topicAction.indexOf('events') === 0 &&
-                    typeof subscribeCallbacks['devices/' + deviceId + '/events/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/events/+'](msgObj);
-            } else if (topicAction.indexOf('logs') === 0 &&
-                    typeof subscribeCallbacks['devices/' + deviceId + '/logs/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/logs/+'](msgObj);
-            } else if (topicAction.indexOf('locations') === 0 &&
-                    typeof subscribeCallbacks['devices/' + deviceId + '/locations/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/locations/+'](msgObj);
-            } else if (topicAction.indexOf('sensors') === 0 &&
-                    typeof subscribeCallbacks['devices/' + deviceId + '/sensors/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/sensors/+'](msgObj);
-            } else if (topicAction.indexOf('commands') === 0) {
-              exec(msgObj.command, function (err, stdout, stderr) {
-                if (err) {
-                  console.log(err);
-                }
-                if (stdout) {
-                  console.log(stdout);
-                }
-                if (stderr) {
-                  console.log(stderr);
-                }
-              });
-            }
+          } else {
+            callCallback();
           }
         }
-      } catch(e) {
-        console.log(e);
-      }
-    };
-
-    mqttClient.onMessageDelivered = function (message) {
-      if (Wia.stream.onMessageDelivered) {
-        Wia.stream.onMessageDelivered(message);
+      } catch (error) {
+        console.log(error);
       }
     };
   };
 
-  Wia.stream.connect = function (opt) {
-    if (!opt) {
-      opt = {}; // eslint-disable-line no-param-reassign
-    }
-    console.log(Wia.streamApi);
-
-    if (Wia.secretKey || Wia.appKey) {
-      mqttClient.connect({
-        timeout: Wia.streamApi.streamTimeout,
-        userName: Wia.secretKey || Wia.appKey,
-        password: ' ',
-        useSSL: Wia.streamApi.useSecure,
-        onSuccess: function () {
-          Wia.stream.connected = true;
-          if (opt && opt.onSuccess) {
-            opt.onSuccess();
-          }
-        },
-        onFailure: function (err) {
-          Wia.stream.connected = false;
-          if (opt && opt.onFailure) {
-            opt.onFailure(err);
-          }
-        }
-      });
-    } else {
-      Wia.stream.connected = false;
-    }
-  };
-
-  Wia.stream.disconnect = function () {
+  Wia.stream.unsubscribe = function (path) {
+    sockets[path].close();
     Wia.stream.connected = false;
-    mqttClient.disconnect();
-  };
-
-  Wia.stream.subscribe = function (topic, cb) {
-    subscribeCallbacks[topic] = cb;
-    if (Wia.stream.connected) {
-      mqttClient.subscribe(topic, {
-        qos: 0
-      });
-    }
-  };
-
-  Wia.stream.unsubscribe = function (topic) {
-    delete subscribeCallbacks[topic];
-    if (Wia.stream.connected) {
-      mqttClient.unsubscribe(topic);
-    }
   };
 
   Wia.stream.unsubscribeAll = function () {
-    for (let topic in subscribeCallbacks) {
-      if (subscribeCallbacks.hasOwnProperty(topic)) {
+    for (let socket in sockets) {
+      if (sockets.hasOwnProperty(socket)) {
         if (Wia.stream.connected) {
-          mqttClient.unsubscribe(topic);
+          Wia.stream.unsubscribe(socket);
         }
-        delete subscribeCallbacks[topic];
+        delete sockets[socket];
       }
     }
-  };
-
-  Wia.stream.publish = function (topic, data) {
-    let message = new Paho.MQTT.Message(data);
-    message.destinationName = topic;
-    mqttClient.send(message);
   };
 }(this));

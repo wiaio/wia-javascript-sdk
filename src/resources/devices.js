@@ -93,4 +93,24 @@
       }
     });
   };
+
+  Wia.devices.subscribe = function (data, callback) {
+    if (typeof data === 'object') {
+      if (data.id) {
+        Wia.stream.subscribe('devices/' + data.id, callback);
+      }
+    } else {
+      Wia.stream.subscribe('devices/' + data, callback);
+    }
+  };
+
+  Wia.devices.unsubscribe = function (data) {
+    if (typeof data === 'object') {
+      if (data.id) {
+        Wia.stream.unsubscribe('devices/' + data.id);
+      }
+    } else {
+      Wia.stream.unsubscribe('devices/' + data);
+    }
+  };
 }(this));

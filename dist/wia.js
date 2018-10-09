@@ -42,13 +42,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   if (typeof root.$ !== 'undefined') {
     Wia.$ = root.$;
-  } // Wia.restApiEndpoint = "https://api.wia.io/v1/"
+  }
 
+  Wia.restApiEndpoint = 'https://api.wia.io/v1/'; // Wia.restApiEndpoint = 'http://local.wia.io:8081/v1/';
 
-  Wia.restApiEndpoint = 'http://local.wia.io:8081/v1/';
   Wia.streamApi = {
     protocol: 'wss',
-    host: 'api.wia.io',
+    host: 'websockets.wia.io',
+    // host: 'local.wia.io:3000',
     port: 3001,
     useSecure: true,
     connectTimeout: 1500,
@@ -259,182 +260,91 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   Wia.stream = Wia.stream || {};
   Wia.stream.connected = false;
+  var sockets = {};
   var subscribeCallbacks = {};
-  var mqttClient = null;
 
-  Wia.stream.initialize = function () {
-    console.log(Wia.streamApi);
-    mqttClient = new Paho.MQTT.Client(Wia.streamApi.host, parseInt(Wia.streamApi.port), '/', '');
+  Wia.stream.subscribe = function (path, cb) {
+    sockets[path] = new WebSocket("".concat(Wia.streamApi.protocol, "://").concat(Wia.streamApi.host, "/").concat(path));
 
-    mqttClient.onConnectionLost = function (response) {
-      Wia.stream.connected = false;
+    if (cb && typeof cb === 'function') {
+      subscribeCallbacks[path] = cb;
+    }
 
-      if (Wia.stream.onConnectionLost) {
-        Wia.stream.onConnectionLost(response);
-      }
-
-      setTimeout(function () {
-        console.log('Attempting reconnect...');
-        mqttClient.connect({
-          onSuccess: function onSuccess() {
-            console.log('Reconnected.');
-
-            for (var topic in subscribeCallbacks) {
-              if (subscribeCallbacks.hasOwnProperty(topic)) {
-                mqttClient.subscribe(topic);
-              }
-            }
-          },
-          onFailure: function onFailure() {
-            console.log('Could not reconnect.');
-          }
-        }, Wia.streamApi.connectTimeout);
-      });
+    sockets[path].onopen = function () {
+      Wia.stream.connected = true;
+      console.log('Connected to stream!');
     };
 
-    mqttClient.onMessageArrived = function (message) {
-      var topic = message.destinationName;
+    sockets[path].onclose = function () {
+      Wia.stream.connected = false;
+      console.log('Not connected to stream.');
+    };
+
+    sockets[path].onerror = function (error) {
+      Wia.stream.connected = false;
+      console.log('WebSocket Error ' + error);
+      console.log('Not connected to stream.');
+    };
+
+    sockets[path].onmessage = function (e) {
+      Wia.stream.connected = true;
 
       try {
+        var msgObj = JSON.parse(e.data);
+
+        var callCallback = function callCallback() {
+          if (subscribeCallbacks[path] && typeof subscribeCallbacks[path] === 'function') {
+            console.log('Server: ' + e.data);
+            subscribeCallbacks[path](msgObj);
+          }
+        };
+
+        var topic = path;
+
         if (topic.indexOf('devices') === 0) {
           var topicSplit = topic.match('devices/(.*?)/(.*)');
 
           if (topicSplit) {
-            var deviceId = topicSplit[1];
             var topicAction = topicSplit[2];
-            var strMsg = message.payloadString;
-            var msgObj = null;
 
-            if (strMsg && strMsg.length > 0) {
-              msgObj = JSON.parse(strMsg);
-            } else {
-              msgObj = {};
+            if (topicAction.indexOf('locations') === 0) {
+              if (msgObj.type === 'location') {
+                callCallback();
+              }
+            } else if (topicAction.indexOf('events') === 0) {
+              if (msgObj.type === 'event') {
+                callCallback();
+              }
+            } else if (topicAction.indexOf('logs') === 0) {
+              if (msgObj.type === 'log') {
+                callCallback();
+              }
             }
-
-            if (topicAction.indexOf('/') >= 0) {
-              var topicActionSplit = topicAction.match('(.*?)/(.*)');
-              msgObj.type = topicActionSplit[1];
-            } else {
-              msgObj.type = topicAction;
-            }
-
-            if (subscribeCallbacks['devices/' + deviceId + '/#'] && typeof subscribeCallbacks['devices/' + deviceId + '/#'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/#'](msgObj);
-            }
-
-            if (subscribeCallbacks[topic] && typeof subscribeCallbacks[topic] === 'function') {
-              subscribeCallbacks[topic](msgObj);
-            }
-
-            if (topicAction.indexOf('events') === 0 && typeof subscribeCallbacks['devices/' + deviceId + '/events/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/events/+'](msgObj);
-            } else if (topicAction.indexOf('logs') === 0 && typeof subscribeCallbacks['devices/' + deviceId + '/logs/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/logs/+'](msgObj);
-            } else if (topicAction.indexOf('locations') === 0 && typeof subscribeCallbacks['devices/' + deviceId + '/locations/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/locations/+'](msgObj);
-            } else if (topicAction.indexOf('sensors') === 0 && typeof subscribeCallbacks['devices/' + deviceId + '/sensors/+'] === 'function') {
-              subscribeCallbacks['devices/' + deviceId + '/sensors/+'](msgObj);
-            } else if (topicAction.indexOf('commands') === 0) {
-              exec(msgObj.command, function (err, stdout, stderr) {
-                if (err) {
-                  console.log(err);
-                }
-
-                if (stdout) {
-                  console.log(stdout);
-                }
-
-                if (stderr) {
-                  console.log(stderr);
-                }
-              });
-            }
+          } else {
+            callCallback();
           }
         }
-      } catch (e) {
-        console.log(e);
-      }
-    };
-
-    mqttClient.onMessageDelivered = function (message) {
-      if (Wia.stream.onMessageDelivered) {
-        Wia.stream.onMessageDelivered(message);
+      } catch (error) {
+        console.log(error);
       }
     };
   };
 
-  Wia.stream.connect = function (opt) {
-    if (!opt) {
-      opt = {}; // eslint-disable-line no-param-reassign
-    }
-
-    console.log(Wia.streamApi);
-
-    if (Wia.secretKey || Wia.appKey) {
-      mqttClient.connect({
-        timeout: Wia.streamApi.streamTimeout,
-        userName: Wia.secretKey || Wia.appKey,
-        password: ' ',
-        useSSL: Wia.streamApi.useSecure,
-        onSuccess: function onSuccess() {
-          Wia.stream.connected = true;
-
-          if (opt && opt.onSuccess) {
-            opt.onSuccess();
-          }
-        },
-        onFailure: function onFailure(err) {
-          Wia.stream.connected = false;
-
-          if (opt && opt.onFailure) {
-            opt.onFailure(err);
-          }
-        }
-      });
-    } else {
-      Wia.stream.connected = false;
-    }
-  };
-
-  Wia.stream.disconnect = function () {
+  Wia.stream.unsubscribe = function (path) {
+    sockets[path].close();
     Wia.stream.connected = false;
-    mqttClient.disconnect();
-  };
-
-  Wia.stream.subscribe = function (topic, cb) {
-    subscribeCallbacks[topic] = cb;
-
-    if (Wia.stream.connected) {
-      mqttClient.subscribe(topic, {
-        qos: 0
-      });
-    }
-  };
-
-  Wia.stream.unsubscribe = function (topic) {
-    delete subscribeCallbacks[topic];
-
-    if (Wia.stream.connected) {
-      mqttClient.unsubscribe(topic);
-    }
   };
 
   Wia.stream.unsubscribeAll = function () {
-    for (var topic in subscribeCallbacks) {
-      if (subscribeCallbacks.hasOwnProperty(topic)) {
+    for (var socket in sockets) {
+      if (sockets.hasOwnProperty(socket)) {
         if (Wia.stream.connected) {
-          mqttClient.unsubscribe(topic);
+          Wia.stream.unsubscribe(socket);
         }
 
-        delete subscribeCallbacks[topic];
+        delete sockets[socket];
       }
     }
-  };
-
-  Wia.stream.publish = function (topic, data) {
-    var message = new Paho.MQTT.Message(data);
-    message.destinationName = topic;
-    mqttClient.send(message);
   };
 })(this);
 /*
@@ -452,20 +362,23 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @namespace Provides an interface to Wia's Rest API
      */
 
-  Wia.commands = Wia.commands || {}; // Wia.commands.subscribe = function (opt, callback) {
-  //   if (!opt) {
-  //     throw new Error('Options cannot be null');
-  //   }
-  //   if (typeof Wia.clientInfo !== 'undefined' && typeof Wia.clientInfo.id !== 'undefined') {
-  //     Wia.stream.subscribe('devices/' + Wia.clientInfo.id + '/commands/' + opt.slug + '/run', callback);
-  //   } else {
-  //     setTimeout(function() {
-  //       if (typeof Wia.clientInfo !== 'undefined' && typeof Wia.clientInfo.id !== 'undefined') {
-  //         Wia.stream.subscribe('devices/' + Wia.clientInfo.id + '/commands/' + opt.slug + '/run', callback);
-  //       }
-  //     }, 5000);
-  //   }
-  // };
+  Wia.commands = Wia.commands || {};
+
+  Wia.commands.subscribe = function (opt, callback) {
+    if (!opt) {
+      throw new Error('Options cannot be null');
+    }
+
+    if (typeof Wia.clientInfo !== 'undefined' && typeof Wia.clientInfo.id !== 'undefined') {
+      Wia.stream.subscribe('devices/' + Wia.clientInfo.id + '/commands/' + opt.slug + '/run', callback);
+    } else {
+      setTimeout(function () {
+        if (typeof Wia.clientInfo !== 'undefined' && typeof Wia.clientInfo.id !== 'undefined') {
+          Wia.stream.subscribe('devices/' + Wia.clientInfo.id + '/commands/' + opt.slug + '/run', callback);
+        }
+      }, 5000);
+    }
+  };
 
   Wia.commands.run = function (opt, success, failure) {
     if (!opt) {
@@ -587,6 +500,26 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
     });
   };
+
+  Wia.devices.subscribe = function (data, callback) {
+    if (_typeof(data) === 'object') {
+      if (data.id) {
+        Wia.stream.subscribe('devices/' + data.id, callback);
+      }
+    } else {
+      Wia.stream.subscribe('devices/' + data, callback);
+    }
+  };
+
+  Wia.devices.unsubscribe = function (data) {
+    if (_typeof(data) === 'object') {
+      if (data.id) {
+        Wia.stream.unsubscribe('devices/' + data.id);
+      }
+    } else {
+      Wia.stream.unsubscribe('devices/' + data);
+    }
+  };
 })(this);
 /*
 *  @author Conall Laverty (team@wia.io)
@@ -624,6 +557,22 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       failure(response);
     });
   };
+
+  Wia.events.subscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.subscribe('devices/' + data.device + '/events/' + data.name, callback);
+    } else {
+      Wia.stream.subscribe('devices/' + data.device + '/events/+', callback);
+    }
+  };
+
+  Wia.events.unsubscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.unsubscribe('devices/' + data.device + '/events/' + data.name, callback);
+    } else {
+      Wia.stream.unsubscribe('devices/' + data.device + '/events/+', callback);
+    }
+  };
 })(this);
 /*
 *  @author Conall Laverty (team@wia.io)
@@ -658,11 +607,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }
 
     var functionId = null;
-    var deviceId = null;
 
     if (_typeof(opt) === 'object') {
       functionId = opt.id;
-      deviceId = opt.device;
     } else {
       functionId = opt;
     }
@@ -706,6 +653,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       failure(response);
     });
   };
+
+  Wia.locations.subscribe = function (data, callback) {
+    Wia.stream.subscribe('devices/' + data.device + '/locations', callback);
+  };
+
+  Wia.locations.unsubscribe = function (data, callback) {
+    Wia.stream.unsubscribe('devices/' + data.device + '/locations', callback);
+  };
 })(this);
 /*
 *  @author Conall Laverty (team@wia.io)
@@ -738,6 +693,22 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, function (response) {
       failure(response);
     });
+  };
+
+  Wia.logs.subscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.subscribe('devices/' + data.device + '/logs/' + data.level, callback);
+    } else {
+      Wia.stream.subscribe('devices/' + data.device + '/logs/+', callback);
+    }
+  };
+
+  Wia.logs.unsubscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.unsubscribe('devices/' + data.device + '/logs/' + data.level, callback);
+    } else {
+      Wia.stream.unsubscribe('devices/' + data.device + '/logs/+', callback);
+    }
   };
 })(this);
 /*

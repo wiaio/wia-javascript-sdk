@@ -28,4 +28,20 @@
       failure(response);
     });
   };
+
+  Wia.logs.subscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.subscribe('devices/' + data.device + '/logs/' + data.level, callback);
+    } else {
+      Wia.stream.subscribe('devices/' + data.device + '/logs/+', callback);
+    }
+  };
+
+  Wia.logs.unsubscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.unsubscribe('devices/' + data.device + '/logs/' + data.level, callback);
+    } else {
+      Wia.stream.unsubscribe('devices/' + data.device + '/logs/+', callback);
+    }
+  };
 }(this));

@@ -57,7 +57,7 @@
       }
     });
   };
-  
+
   Wia.spaces.list = function (params, success, failure) {
     Wia._restClient._get('spaces', params, function (data) {
       if (success && typeof success === 'function') {
@@ -69,5 +69,4 @@
       }
     });
   };
-
 }(this));

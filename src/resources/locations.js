@@ -28,4 +28,12 @@
       failure(response);
     });
   };
+
+  Wia.locations.subscribe = function (data, callback) {
+    Wia.stream.subscribe('devices/' + data.device + '/locations', callback);
+  };
+
+  Wia.locations.unsubscribe = function (data, callback) {
+    Wia.stream.unsubscribe('devices/' + data.device + '/locations', callback);
+  };
 }(this));

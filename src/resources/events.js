@@ -31,4 +31,20 @@
       failure(response);
     });
   };
+
+  Wia.events.subscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.subscribe('devices/' + data.device + '/events/' + data.name, callback);
+    } else {
+      Wia.stream.subscribe('devices/' + data.device + '/events/+', callback);
+    }
+  };
+
+  Wia.events.unsubscribe = function (data, callback) {
+    if (data.name) {
+      Wia.stream.unsubscribe('devices/' + data.device + '/events/' + data.name, callback);
+    } else {
+      Wia.stream.unsubscribe('devices/' + data.device + '/events/+', callback);
+    }
+  };
 }(this));

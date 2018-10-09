@@ -27,11 +27,9 @@
     }
 
     let functionId = null;
-    let deviceId = null;
 
     if (typeof opt === 'object') {
       functionId = opt.id;
-      deviceId = opt.device;
     } else {
       functionId = opt;
     }
