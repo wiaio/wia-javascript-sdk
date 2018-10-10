@@ -59,18 +59,19 @@
           if (topicSplit) {
             let topicAction = topicSplit[2];
 
-            if (topicAction.indexOf('locations') === 0) {
-              if (msgObj.type === 'location') {
+            if (topicAction.indexOf('locations') === 0 && msgObj.type === 'location') {
+              callCallback();
+            } else if (topicAction.indexOf('events') === 0 && msgObj.type === 'event') {
+              if (topicAction.indexOf('events/+') === 0) {
                 callCallback();
+              } else {
+                const eventName = topicAction.split('events/')[1];
+                if (msgObj.name === eventName) { // eslint-disable-line max-depth
+                  callCallback();
+                }
               }
-            } else if (topicAction.indexOf('events') === 0) {
-              if (msgObj.type === 'event') {
-                callCallback();
-              }
-            } else if (topicAction.indexOf('logs') === 0) {
-              if (msgObj.type === 'log') {
-                callCallback();
-              }
+            } else if (topicAction.indexOf('logs') === 0 && msgObj.type === 'log') {
+              callCallback();
             }
           } else {
             callCallback();
