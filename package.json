@@ -8,15 +8,15 @@
     "url": "git@github.com/wiaio/wia-javascript-sdk.git"
   },
   "scripts": {
-    "eslint": "eslint src"
+    "eslint": "eslint src",
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "keywords": [
     "sdk",
     "wia",
     "api",
     "javascript",
-    "iot",
-    "mqtt"
+    "iot"
   ],
   "dependencies": {},
   "devDependencies": {

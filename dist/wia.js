@@ -93,8 +93,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           console.log(response);
         });
       }, 1250);
-    } // Wia.stream.initialize();
-
+    }
   };
 })(this);
 /*
