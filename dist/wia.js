@@ -321,7 +321,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 }
               }
             } else if (topicAction.indexOf('logs') === 0 && msgObj.type === 'log') {
-              callCallback();
+              if (topicAction.indexOf('logs/+') === 0) {
+                callCallback();
+              } else {
+                var logId = topicAction.split('logs/')[1];
+
+                if (msgObj.id === logId) {
+                  // eslint-disable-line max-depth
+                  callCallback();
+                }
+              }
             }
           } else {
             callCallback();
