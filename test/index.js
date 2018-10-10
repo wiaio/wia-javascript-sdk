@@ -232,6 +232,63 @@ describe('Events', function () {
   });
 });
 
+describe('Locations', function () {
+  before(function (done) {
+    logger.info("Starting tests.");
+
+    USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+    DEVICE_SECRET_KEY = process.env.DEVICE_SECRET_KEY;
+    DEVICE_ID = process.env.DEVICE_ID;
+    SPACE_ID = process.env.SPACE_ID;
+
+    Wia.initialize({
+      secretKey: DEVICE_SECRET_KEY
+    });
+    done();
+  });
+
+  it('should publish a location', function (done) {
+    Wia.locations.publish({
+      latitude: 53.34133969434325,
+      longitude: -6.361325665820986
+    }, function(location) {
+      expect(location).to.exist;
+      expect(location.id).to.exist;
+      done();
+    }, function(error) {
+      expect(error).to.not.exist;
+      done();
+    });
+  });
+});
+
+describe('Locations', function () {
+  before(function (done) {
+    logger.info("Starting tests.");
+
+    USER_ACCESS_TOKEN = process.env.USER_ACCESS_TOKEN;
+    DEVICE_ID = process.env.DEVICE_ID;
+
+    Wia.initialize({
+      accessToken: USER_ACCESS_TOKEN
+    });
+    done();
+  });
+
+  it('should retrieve a list of locations', function (done) {
+    Wia.locations.list({
+      'deviceId': DEVICE_ID
+    }, function(locations, count) {
+      expect(locations).to.exist;
+      expect(count).to.be.a('number');
+      done();
+    }, function(error) {
+      expect(error).to.not.exist;
+      done();
+    });
+  });
+});
+
 describe('Commands', function () {
   before(function (done) {
     logger.info("Starting tests.");

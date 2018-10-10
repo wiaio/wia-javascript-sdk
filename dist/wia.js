@@ -650,7 +650,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   Wia.locations = Wia.locations || {};
 
   Wia.locations.publish = function (opt, callback) {
-    Wia._restClient._post('events', opt, function (data) {
+    Wia._restClient._post('locations', opt, function (data) {
       callback(data);
     }, function (response) {
       callback(response);
